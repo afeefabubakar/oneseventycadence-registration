@@ -49,7 +49,10 @@ export async function POST(req: NextRequest) {
     }
 
     if (!event.isActive) {
-      return NextResponse.json({ error: 'This event is no longer accepting registrations' }, { status: 400 })
+      return NextResponse.json(
+        { error: 'This event is no longer accepting registrations' },
+        { status: 400 },
+      )
     }
 
     // Check capacity
@@ -92,7 +95,7 @@ export async function POST(req: NextRequest) {
         name,
         email,
         phone,
-        event: eventId as unknown as number,
+        event: parseInt(eventId, 10),
         status: 'confirmed',
       },
     })
