@@ -23,31 +23,55 @@ async function sendEmailViaBrevo({
   subject: string
   html: string
 }) {
-  const apiKey = process.env.BREVO_SMTP_KEY
+  const apiKey = process.env.BREVO_API_KEY || ''
+  const smtpKey = process.env.BREVO_SMTP_KEY || ''
   const fromEmail = process.env.BREVO_FROM_EMAIL || 'registration@oneseventycadence.com'
 
-  const response = await fetch('https://api.brevo.com/v3/smtp/email', {
-    method: 'POST',
-    headers: {
-      accept: 'application/json',
-      'api-key': apiKey || '',
-      'content-type': 'application/json',
-    },
-    body: JSON.stringify({
-      sender: {
-        name: 'oneseventycadence',
-        email: fromEmail,
+  // If we have an API key (starting with xkeysib-), use the HTTP API
+  if (apiKey.startsWith('xkeysib-') || smtpKey.startsWith('xkeysib-')) {
+    const activeKey = apiKey.startsWith('xkeysib-') ? apiKey : smtpKey
+    const response = await fetch('https://api.brevo.com/v3/smtp/email', {
+      method: 'POST',
+      headers: {
+        accept: 'application/json',
+        'api-key': activeKey,
+        'content-type': 'application/json',
       },
-      to: [{ email: to }],
-      subject,
-      htmlContent: html,
-    }),
+      body: JSON.stringify({
+        sender: {
+          name: 'oneseventycadence',
+          email: fromEmail,
+        },
+        to: [{ email: to }],
+        subject,
+        htmlContent: html,
+      }),
+    })
+
+    if (!response.ok) {
+      const errorText = await response.text()
+      throw new Error(`Brevo HTTP API error: ${response.status} - ${errorText}`)
+    }
+    return
+  }
+
+  // Otherwise, fall back to Nodemailer SMTP
+  const transporter = nodemailer.createTransport({
+    host: 'smtp-relay.brevo.com',
+    port: 587,
+    secure: false,
+    auth: {
+      user: process.env.BREVO_SMTP_USER,
+      pass: smtpKey,
+    },
   })
 
-  if (!response.ok) {
-    const errorText = await response.text()
-    throw new Error(`Brevo HTTP API error: ${response.status} - ${errorText}`)
-  }
+  await transporter.sendMail({
+    from: `"oneseventycadence" <${fromEmail}>`,
+    to,
+    subject,
+    html,
+  })
 }
 
 export async function POST(req: NextRequest) {
