@@ -5,6 +5,11 @@ export const Registrations: CollectionConfig = {
   admin: {
     useAsTitle: 'name',
     defaultColumns: ['name', 'email', 'phone', 'event', 'status', 'attended', 'createdAt'],
+    components: {
+      beforeListTable: [
+        '/components/RegistrationsListHeader#RegistrationsListHeader',
+      ],
+    },
   },
   timestamps: true,
   access: {
@@ -57,6 +62,9 @@ export const Registrations: CollectionConfig = {
       defaultValue: false,
       admin: {
         position: 'sidebar',
+        components: {
+          Cell: '/components/AttendedCell#AttendedCell',
+        },
       },
     },
   ],
