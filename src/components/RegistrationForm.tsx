@@ -54,9 +54,10 @@ export function RegistrationForm({ events }: RegistrationFormProps) {
   const [submittedName, setSubmittedName] = useState('')
 
   // Default to the latest event (by date) that is not full
-  const latestEvent = [...events]
-    .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
-    .find((e) => !e.isFull) || events[events.length - 1]
+  const latestEvent =
+    [...events]
+      .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
+      .find((e) => !e.isFull) || events[events.length - 1]
   const defaultEventId = latestEvent ? latestEvent.id : ''
 
   const form = useForm<FormValues>({
@@ -133,7 +134,12 @@ export function RegistrationForm({ events }: RegistrationFormProps) {
                 Full Name
               </FormLabel>
               <FormControl>
-                <Input placeholder="Ali Ahmad" autoComplete="name" className="h-11" {...field} />
+                <Input
+                  placeholder="Enter your name"
+                  autoComplete="name"
+                  className="h-11"
+                  {...field}
+                />
               </FormControl>
               <FormMessage />
             </FormItem>
@@ -153,7 +159,7 @@ export function RegistrationForm({ events }: RegistrationFormProps) {
               <FormControl>
                 <Input
                   type="email"
-                  placeholder="ali@example.com"
+                  placeholder="Enter your email"
                   autoComplete="email"
                   className="h-11"
                   {...field}
@@ -177,7 +183,7 @@ export function RegistrationForm({ events }: RegistrationFormProps) {
               <FormControl>
                 <Input
                   type="tel"
-                  placeholder="0123456789"
+                  placeholder="Enter your phone number (without +60, e.g. 0123334444)"
                   autoComplete="tel"
                   className="h-11"
                   {...field}
