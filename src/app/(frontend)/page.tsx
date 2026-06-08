@@ -128,20 +128,43 @@ export default async function HomePage() {
 
                     <div className="flex items-start justify-between gap-4">
                       <div className="min-w-0 flex-1">
-                        <div className="flex items-center gap-2">
-                          <p className="font-semibold text-gray-900 truncate">{event.name}</p>
-                          {event.isFull ? (
-                            <span className="shrink-0 rounded-full px-2.5 py-0.5 text-xs font-semibold bg-gray-100 text-gray-500">
-                              Slots Full
-                            </span>
-                          ) : (
-                            <span
-                              className="shrink-0 rounded-full px-2.5 py-0.5 text-xs font-semibold"
-                              style={{ backgroundColor: '#fce7f3', color: '#be185d' }}
-                            >
-                              Open
-                            </span>
-                          )}
+                        <div className="flex items-center justify-between">
+                          <div className="flex items-center gap-2">
+                            <p className="font-semibold text-gray-900 truncate">{event.name}</p>
+                            {event.isFull ? (
+                              <span className="shrink-0 rounded-full px-2.5 py-0.5 text-xs font-semibold bg-gray-100 text-gray-500">
+                                Full
+                              </span>
+                            ) : (
+                              <span
+                                className="shrink-0 rounded-full px-2.5 py-0.5 text-xs font-semibold"
+                                style={{ backgroundColor: '#fce7f3', color: '#be185d' }}
+                              >
+                                Open
+                              </span>
+                            )}
+                          </div>
+                          {/* Slots count */}
+                          <div className="shrink-0 text-right">
+                            <div className="flex items-center gap-1 text-gray-400 justify-end">
+                              <Users className="h-3.5 w-3.5" />
+                              <span className="text-xs">
+                                {event.capacity
+                                  ? event.isFull
+                                    ? `${event.capacity}/${event.capacity}`
+                                    : `${event.registrationCount}/${event.capacity}`
+                                  : `${event.registrationCount} registered`}
+                              </span>
+                            </div>
+                            {!event.isFull && event.slotsLeft !== null && (
+                              <p
+                                className="mt-0.5 text-xs font-medium"
+                                style={{ color: '#E93998' }}
+                              >
+                                {event.slotsLeft} slot{event.slotsLeft !== 1 ? 's' : ''} left
+                              </p>
+                            )}
+                          </div>
                         </div>
 
                         <div className="mt-2 flex flex-wrap items-center gap-x-4 gap-y-1 text-sm text-gray-500">
@@ -163,25 +186,6 @@ export default async function HomePage() {
                         {event.description && (
                           <p className="mt-2 text-sm text-gray-400 line-clamp-2">
                             {event.description}
-                          </p>
-                        )}
-                      </div>
-
-                      {/* Slots count */}
-                      <div className="shrink-0 text-right">
-                        <div className="flex items-center gap-1 text-gray-400 justify-end">
-                          <Users className="h-3.5 w-3.5" />
-                          <span className="text-xs">
-                            {event.capacity
-                              ? event.isFull
-                                ? `${event.capacity}/${event.capacity}`
-                                : `${event.registrationCount}/${event.capacity}`
-                              : `${event.registrationCount} registered`}
-                          </span>
-                        </div>
-                        {!event.isFull && event.slotsLeft !== null && (
-                          <p className="mt-0.5 text-xs font-medium" style={{ color: '#E93998' }}>
-                            {event.slotsLeft} slot{event.slotsLeft !== 1 ? 's' : ''} left
                           </p>
                         )}
                       </div>

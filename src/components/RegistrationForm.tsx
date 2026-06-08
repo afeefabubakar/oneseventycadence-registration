@@ -183,7 +183,7 @@ export function RegistrationForm({ events }: RegistrationFormProps) {
               <FormControl>
                 <Input
                   type="tel"
-                  placeholder="Enter your phone number (without +60, e.g. 0123334444)"
+                  placeholder="Enter your phone number"
                   autoComplete="tel"
                   className="h-11"
                   {...field}
