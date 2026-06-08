@@ -14,16 +14,40 @@ const registerSchema = z.object({
   eventId: z.string().min(1, 'Please select an event'),
 })
 
-function createTransporter() {
-  return nodemailer.createTransport({
-    host: 'smtp-relay.brevo.com',
-    port: 587,
-    secure: false,
-    auth: {
-      user: process.env.BREVO_SMTP_USER,
-      pass: process.env.BREVO_SMTP_KEY,
+async function sendEmailViaBrevo({
+  to,
+  subject,
+  html,
+}: {
+  to: string
+  subject: string
+  html: string
+}) {
+  const apiKey = process.env.BREVO_SMTP_KEY
+  const fromEmail = process.env.BREVO_FROM_EMAIL || 'registration@oneseventycadence.com'
+
+  const response = await fetch('https://api.brevo.com/v3/smtp/email', {
+    method: 'POST',
+    headers: {
+      accept: 'application/json',
+      'api-key': apiKey || '',
+      'content-type': 'application/json',
     },
+    body: JSON.stringify({
+      sender: {
+        name: 'oneseventycadence',
+        email: fromEmail,
+      },
+      to: [{ email: to }],
+      subject,
+      htmlContent: html,
+    }),
   })
+
+  if (!response.ok) {
+    const errorText = await response.text()
+    throw new Error(`Brevo HTTP API error: ${response.status} - ${errorText}`)
+  }
 }
 
 export async function POST(req: NextRequest) {
@@ -112,9 +136,7 @@ export async function POST(req: NextRequest) {
         })
       : 'TBA'
 
-    const transporter = createTransporter()
-    await transporter.sendMail({
-      from: `"oneseventycadence" <${process.env.BREVO_FROM_EMAIL || 'registration@oneseventycadence.com'}>`,
+    await sendEmailViaBrevo({
       to: email,
       subject: `You're registered for ${event.name}! 🎉`,
       html: confirmationEmailHtml({
