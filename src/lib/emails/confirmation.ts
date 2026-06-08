@@ -1,3 +1,76 @@
+interface LexicalNode {
+  type: string
+  text?: string
+  format?: number
+  tag?: string
+  fields?: {
+    url: string
+    newTab?: boolean
+  }
+  children?: LexicalNode[]
+}
+
+function serializeLexicalToHtml(content: any): string {
+  if (!content || !content.root || !content.root.children) return ''
+
+  function serializeNode(node: LexicalNode): string {
+    if (node.type === 'text') {
+      let text = node.text || ''
+      const format = node.format || 0
+
+      // Escape HTML entities to prevent rendering bugs
+      text = text
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#039;')
+
+      if (format & 1) text = `<strong>${text}</strong>`
+      if (format & 2) text = `<em>${text}</em>`
+      if (format & 8) text = `<span style="text-decoration: underline;">${text}</span>`
+      if (format & 4) text = `<span style="text-decoration: line-through;">${text}</span>`
+
+      return text
+    }
+
+    const childrenHtml = node.children ? node.children.map(serializeNode).join('') : ''
+
+    if (node.type === 'link') {
+      const url = node.fields?.url || ''
+      const target = node.fields?.newTab ? ' target="_blank" rel="noopener noreferrer"' : ''
+      return `<a href="${url}"${target} style="color: #E93998; text-decoration: underline; font-weight: 500;">${childrenHtml}</a>`
+    }
+
+    if (node.type === 'paragraph') {
+      return `<p style="margin: 6px 0; font-size: 14px; color: #4b5563; line-height: 1.5;">${childrenHtml}</p>`
+    }
+
+    if (node.type === 'heading') {
+      const tag = node.tag || 'h3'
+      const margin = tag === 'h1' ? '20px 0 10px 0' : tag === 'h2' ? '18px 0 8px 0' : '16px 0 6px 0'
+      const fontSize = tag === 'h1' ? '18px' : tag === 'h2' ? '16px' : '14px'
+      return `<${tag} style="margin: ${margin}; font-size: ${fontSize}; font-weight: 700; color: #111827;">${childrenHtml}</${tag}>`
+    }
+
+    if (node.type === 'list') {
+      const tag = node.tag || 'ul'
+      const style = tag === 'ol'
+        ? 'margin: 6px 0; padding-left: 20px; font-size: 14px; color: #4b5563; list-style-type: decimal;'
+        : 'margin: 6px 0; padding-left: 20px; font-size: 14px; color: #4b5563; list-style-type: disc;'
+      return `<${tag} style="${style}">${childrenHtml}</${tag}>`
+    }
+
+    if (node.type === 'listitem') {
+      return `<li style="margin: 4px 0;">${childrenHtml}</li>`
+    }
+
+    return childrenHtml
+  }
+
+  return content.root.children.map(serializeNode).join('')
+}
+
 interface ConfirmationEmailProps {
   name: string
   email: string
@@ -5,7 +78,9 @@ interface ConfirmationEmailProps {
   eventName: string
   eventDate: string
   eventLocation: string
+  eventLocationLink?: string | null
   eventDescription?: string | null
+  eventDirection?: any | null
 }
 
 export function confirmationEmailHtml({
@@ -15,8 +90,12 @@ export function confirmationEmailHtml({
   eventName,
   eventDate,
   eventLocation,
+  eventLocationLink,
   eventDescription,
+  eventDirection,
 }: ConfirmationEmailProps): string {
+  const directionHtml = eventDirection ? serializeLexicalToHtml(eventDirection) : null
+
   return `
 <!DOCTYPE html>
 <html lang="en">
@@ -69,17 +148,35 @@ export function confirmationEmailHtml({
                           <span style="font-size:13px;color:#6b7280;font-weight:500;">📍 Location</span>
                         </td>
                         <td style="padding:8px 0;border-top:1px solid #fce7f3;">
-                          <span style="font-size:14px;color:#111827;font-weight:600;">${eventLocation}</span>
+                          <span style="font-size:14px;color:#111827;font-weight:600;">
+                            ${
+                              eventLocationLink
+                                ? `<a href="${eventLocationLink}" style="color: #E93998; text-decoration: underline;">${eventLocation}</a>`
+                                : eventLocation
+                            }
+                          </span>
                         </td>
                       </tr>
                       ${
                         eventDescription
                           ? `<tr>
-                        <td style="padding:8px 0;border-top:1px solid #fce7f3;vertical-align:top;">
+                        <td style="padding:8px 0;border-top:1px solid #fce7f3;vertical-align:top;width:40%;">
                           <span style="font-size:13px;color:#6b7280;font-weight:500;">ℹ️ Details</span>
                         </td>
                         <td style="padding:8px 0;border-top:1px solid #fce7f3;">
                           <span style="font-size:14px;color:#374151;line-height:1.5;">${eventDescription}</span>
+                        </td>
+                      </tr>`
+                          : ''
+                      }
+                      ${
+                        directionHtml
+                          ? `<tr>
+                        <td style="padding:8px 0;border-top:1px solid #fce7f3;vertical-align:top;width:40%;">
+                          <span style="font-size:13px;color:#6b7280;font-weight:500;">📍 Directions</span>
+                        </td>
+                        <td style="padding:8px 0;border-top:1px solid #fce7f3;">
+                          <div style="font-size:14px;color:#374151;line-height:1.5;">${directionHtml}</div>
                         </td>
                       </tr>`
                           : ''

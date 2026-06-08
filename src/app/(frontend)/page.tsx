@@ -2,6 +2,7 @@ import { getPayload } from 'payload'
 import configPromise from '@payload-config'
 import { Toaster } from '@/components/ui/sonner'
 import { RegistrationForm } from '@/components/RegistrationForm'
+import { RichTextRenderer } from '@/components/RichTextRenderer'
 import Image from 'next/image'
 import { CalendarDays, MapPin, Users } from 'lucide-react'
 
@@ -36,6 +37,8 @@ async function getActiveEvents() {
         name: event.name,
         date: event.date as string,
         location: event.location,
+        locationLink: (event.locationLink as string | undefined) ?? null,
+        direction: event.direction ?? null,
         description: (event.description as string | undefined) ?? null,
         capacity: event.capacity ?? null,
         registrationCount,
@@ -127,17 +130,17 @@ export default async function HomePage() {
                     />
 
                     <div className="flex items-start justify-between gap-4">
-                      <div className="min-w-0 flex-1">
-                        <div className="flex items-center justify-between">
-                          <div className="flex items-center gap-2">
-                            <p className="font-semibold text-gray-900 truncate">{event.name}</p>
+                      <div className="w-full">
+                        <div className="flex flex-col gap-2 sm:flex-row sm:items-center justify-between">
+                          <div className="flex items-start sm:items-center gap-2">
+                            <p className="font-semibold text-gray-900">{event.name}</p>
                             {event.isFull ? (
-                              <span className="shrink-0 rounded-full px-2.5 py-0.5 text-xs font-semibold bg-gray-100 text-gray-500">
+                              <span className="shrink-0 max-sm:mt-1 rounded-full px-2.5 py-0.5 text-xs font-semibold bg-gray-100 text-gray-500">
                                 Full
                               </span>
                             ) : (
                               <span
-                                className="shrink-0 rounded-full px-2.5 py-0.5 text-xs font-semibold"
+                                className="shrink-0 max-sm:mt-1 rounded-full px-2.5 py-0.5 text-xs font-semibold"
                                 style={{ backgroundColor: '#fce7f3', color: '#be185d' }}
                               >
                                 Open
@@ -145,8 +148,8 @@ export default async function HomePage() {
                             )}
                           </div>
                           {/* Slots count */}
-                          <div className="shrink-0 text-right">
-                            <div className="flex items-center gap-1 text-gray-400 justify-end">
+                          <div>
+                            <div className="flex items-center gap-1 text-gray-400">
                               <Users className="h-3.5 w-3.5" />
                               <span className="text-xs">
                                 {event.capacity
@@ -179,7 +182,18 @@ export default async function HomePage() {
                           </span>
                           <span className="flex items-center gap-1.5">
                             <MapPin className="h-3.5 w-3.5 shrink-0" />
-                            {event.location}
+                            {event.locationLink ? (
+                              <a
+                                href={event.locationLink}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="hover:underline font-medium text-pink-600 hover:text-pink-700"
+                              >
+                                {event.location}
+                              </a>
+                            ) : (
+                              event.location
+                            )}
                           </span>
                         </div>
 
@@ -187,6 +201,15 @@ export default async function HomePage() {
                           <p className="mt-2 text-sm text-gray-400 line-clamp-2">
                             {event.description}
                           </p>
+                        )}
+
+                        {event.direction && (
+                          <div className="mt-3 border-t border-dashed border-gray-100 pt-3">
+                            <p className="text-xs font-semibold uppercase tracking-wider text-gray-400 mb-1">
+                              Directions
+                            </p>
+                            <RichTextRenderer content={event.direction as any} />
+                          </div>
                         )}
                       </div>
                     </div>

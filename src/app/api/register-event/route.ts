@@ -170,7 +170,9 @@ export async function POST(req: NextRequest) {
         eventName: event.name,
         eventDate,
         eventLocation: event.location,
+        eventLocationLink: event.locationLink ?? null,
         eventDescription: event.description ?? null,
+        eventDirection: event.direction ?? null,
       }),
     })
 

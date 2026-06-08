@@ -174,6 +174,22 @@ export interface Event {
   name: string;
   date: string;
   location: string;
+  locationLink?: string | null;
+  direction?: {
+    root: {
+      type: string;
+      children: {
+        type: any;
+        version: number;
+        [k: string]: unknown;
+      }[];
+      direction: ('ltr' | 'rtl') | null;
+      format: 'left' | 'start' | 'center' | 'right' | 'end' | 'justify' | '';
+      indent: number;
+      version: number;
+    };
+    [k: string]: unknown;
+  } | null;
   description?: string | null;
   capacity?: number | null;
   isActive?: boolean | null;
@@ -325,6 +341,8 @@ export interface EventsSelect<T extends boolean = true> {
   name?: T;
   date?: T;
   location?: T;
+  locationLink?: T;
+  direction?: T;
   description?: T;
   capacity?: T;
   isActive?: T;

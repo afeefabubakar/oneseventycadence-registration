@@ -1,3 +1,4 @@
+import { lexicalEditor } from '@payloadcms/richtext-lexical'
 import type { CollectionConfig } from 'payload'
 
 export const Events: CollectionConfig = {
@@ -29,6 +30,17 @@ export const Events: CollectionConfig = {
       type: 'text',
       required: true,
       label: 'Location',
+    },
+    {
+      name: 'locationLink',
+      type: 'text',
+      label: 'Location Map Link (URL)',
+    },
+    {
+      name: 'direction',
+      type: 'richText',
+      label: 'Directions',
+      editor: lexicalEditor({}),
     },
     {
       name: 'description',
