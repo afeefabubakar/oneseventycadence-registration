@@ -7,6 +7,12 @@ export const Events: CollectionConfig = {
     useAsTitle: 'name',
     defaultColumns: ['name', 'date', 'location', 'capacity', 'isActive'],
   },
+  access: {
+    read: () => true, // Publicly readable for homepage
+    create: ({ req }) => !!req.user,
+    update: ({ req }) => !!req.user,
+    delete: ({ req }) => !!req.user,
+  },
   fields: [
     {
       name: 'name',

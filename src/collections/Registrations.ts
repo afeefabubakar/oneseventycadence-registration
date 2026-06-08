@@ -7,6 +7,12 @@ export const Registrations: CollectionConfig = {
     defaultColumns: ['name', 'email', 'phone', 'event', 'status', 'attended', 'createdAt'],
   },
   timestamps: true,
+  access: {
+    read: ({ req }) => !!req.user,
+    create: ({ req }) => !!req.user,
+    update: ({ req }) => !!req.user,
+    delete: ({ req }) => !!req.user,
+  },
   fields: [
     {
       name: 'name',
