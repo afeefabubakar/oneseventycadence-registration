@@ -4,7 +4,7 @@ export const Registrations: CollectionConfig = {
   slug: 'registrations',
   admin: {
     useAsTitle: 'name',
-    defaultColumns: ['name', 'email', 'phone', 'event', 'status', 'createdAt'],
+    defaultColumns: ['name', 'email', 'phone', 'event', 'status', 'attended', 'createdAt'],
   },
   timestamps: true,
   fields: [
@@ -43,6 +43,15 @@ export const Registrations: CollectionConfig = {
         { label: 'Confirmed', value: 'confirmed' },
         { label: 'Cancelled', value: 'cancelled' },
       ],
+    },
+    {
+      name: 'attended',
+      type: 'checkbox',
+      label: 'Attended',
+      defaultValue: false,
+      admin: {
+        position: 'sidebar',
+      },
     },
   ],
 }

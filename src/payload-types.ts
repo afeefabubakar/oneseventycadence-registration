@@ -191,6 +191,7 @@ export interface Registration {
   phone: string;
   event: number | Event;
   status: 'confirmed' | 'cancelled';
+  attended?: boolean | null;
   updatedAt: string;
   createdAt: string;
 }
@@ -340,6 +341,7 @@ export interface RegistrationsSelect<T extends boolean = true> {
   phone?: T;
   event?: T;
   status?: T;
+  attended?: T;
   updatedAt?: T;
   createdAt?: T;
 }
