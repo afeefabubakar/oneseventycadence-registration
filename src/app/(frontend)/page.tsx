@@ -4,7 +4,7 @@ import { Toaster } from '@/components/ui/sonner'
 import { RegistrationForm } from '@/components/RegistrationForm'
 import { RichTextRenderer } from '@/components/RichTextRenderer'
 import Image from 'next/image'
-import { CalendarDays, MapPin, Users } from 'lucide-react'
+import { CalendarDays, MapPin, Users, CalendarOff } from 'lucide-react'
 
 export const dynamic = 'force-dynamic'
 
@@ -92,19 +92,65 @@ export default async function HomePage() {
 
           {/* ── Registration Form Card ── */}
           <div className="rounded-2xl border border-gray-100 bg-white p-8 shadow-sm">
-            <div className="mb-6">
-              <h2 className="text-xl font-bold text-gray-900">Registration Form</h2>
-              <p className="mt-1 text-sm text-gray-500">
-                Fill in your details below. A confirmation email will be sent to you.
-              </p>
-              {/* Pink underline accent */}
-              <div
-                className="mt-3 h-0.5 w-10 rounded-full"
-                style={{ backgroundColor: '#E93998' }}
-              />
-            </div>
+            {events.length === 0 ? (
+              <div className="flex flex-col items-center text-center py-8 px-4 animate-in fade-in slide-in-from-bottom-4 duration-500">
+                <div
+                  className="mb-5 flex h-16 w-16 items-center justify-center rounded-2xl shadow-sm transition-transform duration-300 hover:scale-105"
+                  style={{ backgroundColor: '#fdf2f8' }}
+                >
+                  <CalendarOff className="h-8 w-8" style={{ color: '#E93998' }} />
+                </div>
+                <h2 className="text-xl font-extrabold text-gray-900 tracking-tight">
+                  Catching Our Breath
+                </h2>
+                <p className="mt-3 text-sm leading-relaxed text-gray-500 max-w-md">
+                  We don't have any event scheduled at the moment, but we're mapping out our next
+                  routes! Check back soon or follow us on socials for updates.
+                </p>
+                {/* Accent bar */}
+                <div
+                  className="mt-6 h-1 w-12 rounded-full opacity-60"
+                  style={{ backgroundColor: '#E93998' }}
+                />
+              </div>
+            ) : events.every((event) => event.isFull) ? (
+              <div className="flex flex-col items-center text-center py-8 px-4 animate-in fade-in slide-in-from-bottom-4 duration-500">
+                <div
+                  className="mb-5 flex h-16 w-16 items-center justify-center rounded-2xl shadow-sm transition-transform duration-300 hover:scale-105"
+                  style={{ backgroundColor: '#fdf2f8' }}
+                >
+                  <Users className="h-8 w-8" style={{ color: '#E93998' }} />
+                </div>
+                <h2 className="text-xl font-extrabold text-gray-900 tracking-tight">
+                  Registration Closed
+                </h2>
+                <p className="mt-3 text-sm leading-relaxed text-gray-500 max-w-md">
+                  Thank you for the incredible support! All our upcoming events are currently at
+                  full capacity. Stay tuned for updates.
+                </p>
+                {/* Accent bar */}
+                <div
+                  className="mt-6 h-1 w-12 rounded-full opacity-60"
+                  style={{ backgroundColor: '#E93998' }}
+                />
+              </div>
+            ) : (
+              <>
+                <div className="mb-6">
+                  <h2 className="text-xl font-bold text-gray-900">Registration Form</h2>
+                  <p className="mt-1 text-sm text-gray-500">
+                    Fill in your details below. A confirmation email will be sent to you.
+                  </p>
+                  {/* Pink underline accent */}
+                  <div
+                    className="mt-3 h-0.5 w-10 rounded-full"
+                    style={{ backgroundColor: '#E93998' }}
+                  />
+                </div>
 
-            <RegistrationForm events={events} />
+                <RegistrationForm events={events} />
+              </>
+            )}
           </div>
 
           {/* ── Events Section ── */}
@@ -113,7 +159,7 @@ export default async function HomePage() {
               <div className="mb-4 flex items-center gap-2">
                 <CalendarDays className="h-4 w-4" style={{ color: '#E93998' }} />
                 <h3 className="text-sm font-semibold uppercase tracking-widest text-gray-500">
-                  {events.length === 1 ? 'Upcoming Event' : 'Upcoming Events'}
+                  {events.length === 1 ? 'Upcoming Run' : 'Upcoming Runs'}
                 </h3>
               </div>
 
