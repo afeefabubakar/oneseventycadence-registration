@@ -4,7 +4,6 @@ import Image from 'next/image'
 import { Toaster } from '@/components/ui/sonner'
 import { RegistrationSection } from '@/components/RegistrationSection'
 import { UpcomingRuns } from '@/components/UpcomingRuns'
-import { FullyRegisteredRuns } from '@/components/FullyRegisteredRuns'
 import { PastRuns } from '@/components/PastRuns'
 import { EventItem } from '@/types/event'
 
@@ -12,8 +11,6 @@ export const dynamic = 'force-dynamic'
 
 async function getAllEvents(): Promise<{
   upcomingEvents: EventItem[]
-  openUpcomingEvents: EventItem[]
-  fullUpcomingEvents: EventItem[]
   registerableEvents: EventItem[]
   pastEvents: EventItem[]
 }> {
@@ -90,9 +87,6 @@ async function getAllEvents(): Promise<{
     .filter((e) => !e.isPast)
     .sort((a, b) => new Date(a.date).getTime() - new Date(a.date).getTime())
 
-  const openUpcomingEvents = upcomingEvents.filter((e) => !e.isFull)
-  const fullUpcomingEvents = upcomingEvents.filter((e) => e.isFull)
-
   // Events available for active registration form dropdown
   const registerableEvents = upcomingEvents.filter(
     (e) => e.registrationStatus === 'open',
@@ -102,12 +96,11 @@ async function getAllEvents(): Promise<{
     .filter((e) => e.isPast)
     .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
 
-  return { upcomingEvents, openUpcomingEvents, fullUpcomingEvents, registerableEvents, pastEvents }
+  return { upcomingEvents, registerableEvents, pastEvents }
 }
 
 export default async function HomePage() {
-  const { upcomingEvents, openUpcomingEvents, fullUpcomingEvents, registerableEvents, pastEvents } =
-    await getAllEvents()
+  const { upcomingEvents, registerableEvents, pastEvents } = await getAllEvents()
 
   return (
     <>
@@ -152,10 +145,7 @@ export default async function HomePage() {
           />
 
           {/* Upcoming Runs Section */}
-          <UpcomingRuns events={openUpcomingEvents} />
-
-          {/* Upcoming & Fully Registered Events Section */}
-          <FullyRegisteredRuns events={fullUpcomingEvents} />
+          <UpcomingRuns events={upcomingEvents} />
 
           {/* Past Runs Section */}
           <PastRuns events={pastEvents} />
