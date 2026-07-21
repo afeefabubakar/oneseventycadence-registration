@@ -182,7 +182,7 @@ export default async function HomePage() {
                   />
                 </div>
 
-                <RegistrationForm events={registerableEvents} />
+                <RegistrationForm events={upcomingEvents} />
               </>
             )}
           </div>

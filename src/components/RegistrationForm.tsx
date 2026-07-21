@@ -43,6 +43,8 @@ interface Event {
   capacity: number | null
   registrationCount: number
   isFull: boolean
+  registrationStatus?: 'open' | 'not_started' | 'closed' | 'full'
+  registrationOpenDate?: string | null
 }
 
 interface RegistrationFormProps {
@@ -53,12 +55,13 @@ export function RegistrationForm({ events }: RegistrationFormProps) {
   const [isSuccess, setIsSuccess] = useState(false)
   const [submittedName, setSubmittedName] = useState('')
 
-  // Default to the latest event (by date) that is not full
-  const latestEvent =
+  // Default to the latest event (by date) that is open for registration
+  const defaultEvent =
     [...events]
       .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
-      .find((e) => !e.isFull) || events[events.length - 1]
-  const defaultEventId = latestEvent ? latestEvent.id : ''
+      .find((e) => (e.registrationStatus ? e.registrationStatus === 'open' : !e.isFull)) ||
+    events[events.length - 1]
+  const defaultEventId = defaultEvent ? defaultEvent.id : ''
 
   const form = useForm<FormValues>({
     resolver: zodResolver(formSchema),
@@ -216,35 +219,57 @@ export function RegistrationForm({ events }: RegistrationFormProps) {
                       <SelectItemText>No events available</SelectItemText>
                     </SelectItem>
                   ) : (
-                    events.map((event) => (
-                      <SelectItem
-                        key={event.id}
-                        value={event.id}
-                        textValue={event.name}
-                        disabled={event.isFull}
-                        className="py-3"
-                      >
-                        <div className="flex flex-col gap-0.5 w-full">
-                          <span className="font-medium">
-                            <SelectItemText>{event.name}</SelectItemText>
-                            {event.isFull && (
-                              <span className="ml-2 text-xs font-semibold text-destructive">
-                                · Slots Full
-                              </span>
-                            )}
-                          </span>
-                          <span className="text-xs text-muted-foreground">
-                            {new Date(event.date).toLocaleDateString('en-MY', {
-                              weekday: 'short',
-                              day: 'numeric',
-                              month: 'short',
-                              year: 'numeric',
-                            })}{' '}
-                            · {event.location}
-                          </span>
-                        </div>
-                      </SelectItem>
-                    ))
+                    events.map((event) => {
+                      const isDisabled = event.registrationStatus
+                        ? event.registrationStatus !== 'open'
+                        : event.isFull
+
+                      return (
+                        <SelectItem
+                          key={event.id}
+                          value={event.id}
+                          textValue={event.name}
+                          disabled={isDisabled}
+                          className="py-3"
+                        >
+                          <div className="flex flex-col gap-0.5 w-full">
+                            <span className="font-medium">
+                              <SelectItemText>{event.name}</SelectItemText>
+                              {event.registrationStatus === 'not_started' && (
+                                <span className="ml-2 text-xs font-semibold text-amber-600">
+                                  · Reg Opens{' '}
+                                  {event.registrationOpenDate
+                                    ? new Date(event.registrationOpenDate).toLocaleDateString(
+                                        'en-MY',
+                                        { month: 'short', day: 'numeric' },
+                                      )
+                                    : 'Soon'}
+                                </span>
+                              )}
+                              {event.registrationStatus === 'full' && (
+                                <span className="ml-2 text-xs font-semibold text-destructive">
+                                  · Slots Full
+                                </span>
+                              )}
+                              {event.registrationStatus === 'closed' && (
+                                <span className="ml-2 text-xs font-semibold text-muted-foreground">
+                                  · Reg Closed
+                                </span>
+                              )}
+                            </span>
+                            <span className="text-xs text-muted-foreground">
+                              {new Date(event.date).toLocaleDateString('en-MY', {
+                                weekday: 'short',
+                                day: 'numeric',
+                                month: 'short',
+                                year: 'numeric',
+                              })}{' '}
+                              · {event.location}
+                            </span>
+                          </div>
+                        </SelectItem>
+                      )
+                    })
                   )}
                 </SelectContent>
               </Select>
