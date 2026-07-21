@@ -7,10 +7,11 @@ import { z } from 'zod'
 
 const registerSchema = z.object({
   name: z.string().min(2, 'Name must be at least 2 characters'),
-  email: z.string().email('Invalid email address'),
+  email: z.string().email('Please enter a valid email address'),
   phone: z
     .string()
-    .regex(/^01\d{8,9}$/, 'Phone must be a valid Malaysian number (e.g. 0123456789)'),
+    .min(8, 'Phone number must be at least 8 characters')
+    .regex(/^[+\d\s\-()]{8,20}$/, 'Please enter a valid phone number (e.g. 0123456789 or +60123456789)'),
   eventId: z.string().min(1, 'Please select an event'),
 })
 
@@ -87,6 +88,7 @@ export async function POST(req: NextRequest) {
     }
 
     const { name, email, phone, eventId } = parsed.data
+    const cleanEmail = email.trim().toLowerCase()
 
     const payload = await getPayload({ config: configPromise })
 
@@ -146,25 +148,28 @@ export async function POST(req: NextRequest) {
     const existing = await payload.find({
       collection: 'registrations',
       where: {
-        email: { equals: email },
         event: { equals: eventId },
       },
-      limit: 1,
+      limit: 1000,
     })
 
-    if (existing.totalDocs > 0) {
+    const isDuplicate = existing.docs.some(
+      (reg) => reg.email && reg.email.trim().toLowerCase() === cleanEmail,
+    )
+
+    if (isDuplicate) {
       return NextResponse.json(
         { error: 'You have already registered for this event with this email address.' },
         { status: 409 },
       )
     }
 
-    // Save registration
+    // Save registration with normalized email
     await payload.create({
       collection: 'registrations',
       data: {
         name,
-        email,
+        email: cleanEmail,
         phone,
         event: parseInt(eventId, 10),
         status: 'confirmed',
@@ -180,15 +185,16 @@ export async function POST(req: NextRequest) {
           day: 'numeric',
           hour: '2-digit',
           minute: '2-digit',
+          timeZone: 'Asia/Kuala_Lumpur',
         })
       : 'TBA'
 
     await sendEmailViaBrevo({
-      to: email,
+      to: cleanEmail,
       subject: `You're registered for ${event.name}! 🎉`,
       html: confirmationEmailHtml({
         name,
-        email,
+        email: cleanEmail,
         phone,
         eventName: event.name,
         eventDate,

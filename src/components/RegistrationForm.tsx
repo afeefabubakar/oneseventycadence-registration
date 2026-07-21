@@ -29,7 +29,10 @@ import {
 const formSchema = z.object({
   name: z.string().min(2, 'Name must be at least 2 characters'),
   email: z.string().email('Please enter a valid email address'),
-  phone: z.string().regex(/^01\d{8,9}$/, 'Please enter a valid Malaysian number (e.g. 0123456789)'),
+  phone: z
+    .string()
+    .min(8, 'Phone number must be at least 8 characters')
+    .regex(/^[+\d\s\-()]{8,20}$/, 'Please enter a valid phone number (e.g. 0123456789 or +60123456789)'),
   eventId: z.string().min(1, 'Please select an event'),
 })
 
