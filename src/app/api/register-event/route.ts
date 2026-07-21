@@ -103,6 +103,29 @@ export async function POST(req: NextRequest) {
       )
     }
 
+    const now = new Date()
+    if (event.registrationOpenDate && new Date(event.registrationOpenDate) > now) {
+      const openDateFormatted = new Date(event.registrationOpenDate).toLocaleDateString('en-MY', {
+        weekday: 'short',
+        day: 'numeric',
+        month: 'short',
+        year: 'numeric',
+        hour: '2-digit',
+        minute: '2-digit',
+      })
+      return NextResponse.json(
+        { error: `Registration for this event opens on ${openDateFormatted}.` },
+        { status: 400 },
+      )
+    }
+
+    if (event.registrationCloseDate && new Date(event.registrationCloseDate) < now) {
+      return NextResponse.json(
+        { error: 'Registration for this event has closed.' },
+        { status: 400 },
+      )
+    }
+
     // Check capacity
     const registrationCount = await payload.count({
       collection: 'registrations',

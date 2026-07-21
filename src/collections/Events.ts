@@ -32,6 +32,26 @@ export const Events: CollectionConfig = {
       },
     },
     {
+      name: 'registrationOpenDate',
+      type: 'date',
+      label: 'Registration Open Date',
+      admin: {
+        date: {
+          pickerAppearance: 'dayAndTime',
+        },
+      },
+    },
+    {
+      name: 'registrationCloseDate',
+      type: 'date',
+      label: 'Registration Close Date',
+      admin: {
+        date: {
+          pickerAppearance: 'dayAndTime',
+        },
+      },
+    },
+    {
       name: 'location',
       type: 'text',
       required: true,
