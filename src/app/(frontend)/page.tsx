@@ -8,6 +8,10 @@ import { CalendarDays, MapPin, Users, CalendarOff, Clock } from 'lucide-react'
 
 export const dynamic = 'force-dynamic'
 
+function getMalaysianDateStr(dateInput: Date | string): string {
+  return new Date(dateInput).toLocaleDateString('en-CA', { timeZone: 'Asia/Kuala_Lumpur' })
+}
+
 async function getAllEvents() {
   const payload = await getPayload({ config: configPromise })
 
@@ -18,6 +22,7 @@ async function getAllEvents() {
   })
 
   const now = new Date()
+  const todayStr = getMalaysianDateStr(now)
 
   const allEvents = await Promise.all(
     eventsResult.docs.map(async (event) => {
@@ -32,17 +37,9 @@ async function getAllEvents() {
       const registrationCount = countResult.totalDocs
       const isFull = event.capacity ? registrationCount >= event.capacity : false
       const slotsLeft = event.capacity ? Math.max(0, event.capacity - registrationCount) : null
-      const eventDate = new Date(event.date as string)
-      const eventEndOfDay = new Date(
-        eventDate.getFullYear(),
-        eventDate.getMonth(),
-        eventDate.getDate(),
-        23,
-        59,
-        59,
-        999,
-      )
-      const isPast = eventEndOfDay.getTime() < now.getTime()
+
+      const eventDateStr = getMalaysianDateStr(event.date as string)
+      const isPast = eventDateStr < todayStr
 
       const openDate = event.registrationOpenDate ? new Date(event.registrationOpenDate as string) : null
       const closeDate = event.registrationCloseDate ? new Date(event.registrationCloseDate as string) : null
