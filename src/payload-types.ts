@@ -173,6 +173,8 @@ export interface Event {
   id: number;
   name: string;
   date: string;
+  registrationOpenDate?: string | null;
+  registrationCloseDate?: string | null;
   location: string;
   locationLink?: string | null;
   direction?: {
@@ -340,6 +342,8 @@ export interface MediaSelect<T extends boolean = true> {
 export interface EventsSelect<T extends boolean = true> {
   name?: T;
   date?: T;
+  registrationOpenDate?: T;
+  registrationCloseDate?: T;
   location?: T;
   locationLink?: T;
   direction?: T;
