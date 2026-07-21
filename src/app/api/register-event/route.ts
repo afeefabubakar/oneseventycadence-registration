@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
+import { revalidatePath } from 'next/cache'
 import { getPayload } from 'payload'
 import configPromise from '@payload-config'
 import nodemailer from 'nodemailer'
@@ -176,6 +177,8 @@ export async function POST(req: NextRequest) {
         status: 'confirmed',
       },
     })
+
+    revalidatePath('/')
 
     // Send confirmation email
     const eventDate = event.date

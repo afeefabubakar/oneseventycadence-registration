@@ -1,4 +1,5 @@
 import type { CollectionConfig } from 'payload'
+import { revalidatePath } from 'next/cache'
 
 export const Registrations: CollectionConfig = {
   slug: 'registrations',
@@ -17,6 +18,18 @@ export const Registrations: CollectionConfig = {
     create: ({ req }) => !!req.user,
     update: ({ req }) => !!req.user,
     delete: ({ req }) => !!req.user,
+  },
+  hooks: {
+    afterChange: [
+      () => {
+        revalidatePath('/')
+      },
+    ],
+    afterDelete: [
+      () => {
+        revalidatePath('/')
+      },
+    ],
   },
   fields: [
     {
