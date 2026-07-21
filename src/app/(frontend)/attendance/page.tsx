@@ -67,7 +67,7 @@ export default async function AttendancePage() {
                 oneseventycadence
               </h1>
             </Link>
-            <p className="mt-2 text-sm text-gray-500 font-medium">Event Attendance Check-in</p>
+            <p className="mt-2 text-sm text-gray-500 font-medium">Event Attendance Confirmation</p>
           </div>
 
           {/* Form Card */}
@@ -94,7 +94,7 @@ export default async function AttendancePage() {
             ) : (
               <>
                 <div className="mb-6">
-                  <h2 className="text-lg font-bold text-gray-900">Scan Check-in</h2>
+                  <h2 className="text-lg font-bold text-gray-900">Attendance Confirmation</h2>
                   <p className="mt-1 text-xs text-gray-500">
                     Enter the email address you registered with and select your event to submit your attendance.
                   </p>
