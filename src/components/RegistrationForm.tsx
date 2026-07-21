@@ -4,6 +4,7 @@ import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
 import { useState } from 'react'
+import { useRouter } from 'next/navigation'
 import { toast } from 'sonner'
 import { Loader2, CheckCircle2, User, Mail, Phone, CalendarDays } from 'lucide-react'
 
@@ -59,6 +60,7 @@ interface RegistrationFormProps {
 }
 
 export function RegistrationForm({ events }: RegistrationFormProps) {
+  const router = useRouter()
   const [isSuccess, setIsSuccess] = useState(false)
   const [submittedName, setSubmittedName] = useState('')
 
@@ -99,6 +101,7 @@ export function RegistrationForm({ events }: RegistrationFormProps) {
 
       setSubmittedName(values.name.split(' ')[0])
       setIsSuccess(true)
+      router.refresh()
     } catch {
       toast.error('Network error. Please check your connection and try again.')
     }
