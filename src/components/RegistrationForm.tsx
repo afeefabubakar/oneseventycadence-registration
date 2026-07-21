@@ -7,6 +7,7 @@ import { useState } from 'react'
 import { toast } from 'sonner'
 import { Loader2, CheckCircle2, User, Mail, Phone, CalendarDays } from 'lucide-react'
 
+import { formatEventDateTime } from '@/lib/utils'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import {
@@ -261,13 +262,10 @@ export function RegistrationForm({ events }: RegistrationFormProps) {
                               )}
                             </span>
                             <span className="text-xs text-muted-foreground">
-                              {new Date(event.date).toLocaleDateString('en-MY', {
-                                weekday: 'short',
-                                day: 'numeric',
-                                month: 'short',
-                                year: 'numeric',
-                              })}{' '}
-                              · {event.location}
+                              {formatEventDateTime(event.date, { monthFormat: 'short' })}
+                            </span>
+                            <span className="text-xs text-muted-foreground whitespace-normal break-words">
+                              {event.location}
                             </span>
                           </div>
                         </SelectItem>
