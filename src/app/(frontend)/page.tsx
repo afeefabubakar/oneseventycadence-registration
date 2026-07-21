@@ -32,7 +32,17 @@ async function getAllEvents() {
       const registrationCount = countResult.totalDocs
       const isFull = event.capacity ? registrationCount >= event.capacity : false
       const slotsLeft = event.capacity ? Math.max(0, event.capacity - registrationCount) : null
-      const isPast = new Date(event.date).getTime() < now.getTime()
+      const eventDate = new Date(event.date as string)
+      const eventEndOfDay = new Date(
+        eventDate.getFullYear(),
+        eventDate.getMonth(),
+        eventDate.getDate(),
+        23,
+        59,
+        59,
+        999,
+      )
+      const isPast = eventEndOfDay.getTime() < now.getTime()
 
       const openDate = event.registrationOpenDate ? new Date(event.registrationOpenDate as string) : null
       const closeDate = event.registrationCloseDate ? new Date(event.registrationCloseDate as string) : null
@@ -41,7 +51,9 @@ async function getAllEvents() {
       const isRegistrationClosed = closeDate ? now > closeDate : false
 
       let registrationStatus: 'open' | 'not_started' | 'closed' | 'full' = 'open'
-      if (isFull) {
+      if (!event.isActive) {
+        registrationStatus = 'closed'
+      } else if (isFull) {
         registrationStatus = 'full'
       } else if (isNotStarted) {
         registrationStatus = 'not_started'
@@ -64,14 +76,17 @@ async function getAllEvents() {
         isFull,
         slotsLeft,
         isActive: event.isActive,
+        showEvent: (event.showEvent as boolean | undefined) ?? true,
         isPast,
         registrationStatus,
       }
     }),
   )
 
-  const upcomingEvents = allEvents
-    .filter((e) => !e.isPast && e.isActive)
+  const visibleEvents = allEvents.filter((e) => e.showEvent !== false)
+
+  const upcomingEvents = visibleEvents
+    .filter((e) => !e.isPast)
     .sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime())
 
   // Events available for active registration form dropdown
@@ -79,7 +94,7 @@ async function getAllEvents() {
     (e) => e.registrationStatus === 'open',
   )
 
-  const pastEvents = allEvents
+  const pastEvents = visibleEvents
     .filter((e) => e.isPast)
     .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
 
@@ -182,7 +197,7 @@ export default async function HomePage() {
                   />
                 </div>
 
-                <RegistrationForm events={upcomingEvents} />
+                <RegistrationForm events={registerableEvents} />
               </>
             )}
           </div>
@@ -237,7 +252,7 @@ export default async function HomePage() {
                             )}
                             {event.registrationStatus === 'closed' && (
                               <span className="shrink-0 max-sm:mt-1 rounded-full px-2.5 py-0.5 text-xs font-semibold bg-gray-100 text-gray-500">
-                                Closed
+                                Upcoming
                               </span>
                             )}
                           </div>
@@ -418,15 +433,6 @@ export default async function HomePage() {
                           <p className="mt-2 text-sm text-gray-400 line-clamp-2">
                             {event.description}
                           </p>
-                        )}
-
-                        {event.direction && (
-                          <div className="mt-3 border-t border-dashed border-gray-100 pt-3">
-                            <p className="text-xs font-semibold uppercase tracking-wider text-gray-400 mb-1">
-                              Directions
-                            </p>
-                            <RichTextRenderer content={event.direction as any} />
-                          </div>
                         )}
                       </div>
                     </div>
