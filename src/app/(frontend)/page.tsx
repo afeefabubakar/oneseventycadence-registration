@@ -4,21 +4,22 @@ import { Toaster } from '@/components/ui/sonner'
 import { RegistrationForm } from '@/components/RegistrationForm'
 import { RichTextRenderer } from '@/components/RichTextRenderer'
 import Image from 'next/image'
-import { CalendarDays, MapPin, Users, CalendarOff } from 'lucide-react'
+import { CalendarDays, MapPin, Users, CalendarOff, Clock } from 'lucide-react'
 
 export const dynamic = 'force-dynamic'
 
-async function getActiveEvents() {
+async function getAllEvents() {
   const payload = await getPayload({ config: configPromise })
 
   const eventsResult = await payload.find({
     collection: 'events',
-    where: { isActive: { equals: true } },
     sort: 'date',
-    limit: 50,
+    limit: 100,
   })
 
-  const events = await Promise.all(
+  const now = new Date()
+
+  const allEvents = await Promise.all(
     eventsResult.docs.map(async (event) => {
       const countResult = await payload.count({
         collection: 'registrations',
@@ -31,11 +32,29 @@ async function getActiveEvents() {
       const registrationCount = countResult.totalDocs
       const isFull = event.capacity ? registrationCount >= event.capacity : false
       const slotsLeft = event.capacity ? Math.max(0, event.capacity - registrationCount) : null
+      const isPast = new Date(event.date).getTime() < now.getTime()
+
+      const openDate = event.registrationOpenDate ? new Date(event.registrationOpenDate as string) : null
+      const closeDate = event.registrationCloseDate ? new Date(event.registrationCloseDate as string) : null
+
+      const isNotStarted = openDate ? now < openDate : false
+      const isRegistrationClosed = closeDate ? now > closeDate : false
+
+      let registrationStatus: 'open' | 'not_started' | 'closed' | 'full' = 'open'
+      if (isFull) {
+        registrationStatus = 'full'
+      } else if (isNotStarted) {
+        registrationStatus = 'not_started'
+      } else if (isRegistrationClosed) {
+        registrationStatus = 'closed'
+      }
 
       return {
         id: String(event.id),
         name: event.name,
         date: event.date as string,
+        registrationOpenDate: (event.registrationOpenDate as string | undefined) ?? null,
+        registrationCloseDate: (event.registrationCloseDate as string | undefined) ?? null,
         location: event.location,
         locationLink: (event.locationLink as string | undefined) ?? null,
         direction: event.direction ?? null,
@@ -44,15 +63,31 @@ async function getActiveEvents() {
         registrationCount,
         isFull,
         slotsLeft,
+        isActive: event.isActive,
+        isPast,
+        registrationStatus,
       }
     }),
   )
 
-  return events
+  const upcomingEvents = allEvents
+    .filter((e) => !e.isPast && e.isActive)
+    .sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime())
+
+  // Events available for active registration form dropdown
+  const registerableEvents = upcomingEvents.filter(
+    (e) => e.registrationStatus === 'open',
+  )
+
+  const pastEvents = allEvents
+    .filter((e) => e.isPast)
+    .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
+
+  return { upcomingEvents, registerableEvents, pastEvents }
 }
 
 export default async function HomePage() {
-  const events = await getActiveEvents()
+  const { upcomingEvents, registerableEvents, pastEvents } = await getAllEvents()
 
   return (
     <>
@@ -92,7 +127,7 @@ export default async function HomePage() {
 
           {/* ── Registration Form Card ── */}
           <div className="rounded-2xl border border-gray-100 bg-white p-8 shadow-sm">
-            {events.length === 0 ? (
+            {upcomingEvents.length === 0 ? (
               <div className="flex flex-col items-center text-center py-8 px-4 animate-in fade-in slide-in-from-bottom-4 duration-500">
                 <div
                   className="mb-5 flex h-16 w-16 items-center justify-center rounded-2xl shadow-sm transition-transform duration-300 hover:scale-105"
@@ -113,7 +148,7 @@ export default async function HomePage() {
                   style={{ backgroundColor: '#E93998' }}
                 />
               </div>
-            ) : events.every((event) => event.isFull) ? (
+            ) : registerableEvents.length === 0 ? (
               <div className="flex flex-col items-center text-center py-8 px-4 animate-in fade-in slide-in-from-bottom-4 duration-500">
                 <div
                   className="mb-5 flex h-16 w-16 items-center justify-center rounded-2xl shadow-sm transition-transform duration-300 hover:scale-105"
@@ -125,8 +160,7 @@ export default async function HomePage() {
                   Registration Closed
                 </h2>
                 <p className="mt-3 text-sm leading-relaxed text-gray-500 max-w-md">
-                  Thank you for the incredible support! All our upcoming events are currently at
-                  full capacity. Stay tuned for updates.
+                  Thank you for the incredible support! Registrations for our upcoming events are currently closed or at full capacity. Stay tuned for updates.
                 </p>
                 {/* Accent bar */}
                 <div
@@ -148,23 +182,23 @@ export default async function HomePage() {
                   />
                 </div>
 
-                <RegistrationForm events={events} />
+                <RegistrationForm events={registerableEvents} />
               </>
             )}
           </div>
 
-          {/* ── Events Section ── */}
-          {events.length > 0 && (
+          {/* ── Upcoming Runs Section ── */}
+          {upcomingEvents.length > 0 && (
             <div className="mt-10">
               <div className="mb-4 flex items-center gap-2">
                 <CalendarDays className="h-4 w-4" style={{ color: '#E93998' }} />
                 <h3 className="text-sm font-semibold uppercase tracking-widest text-gray-500">
-                  {events.length === 1 ? 'Upcoming Run' : 'Upcoming Runs'}
+                  {upcomingEvents.length === 1 ? 'Upcoming Run' : 'Upcoming Runs'}
                 </h3>
               </div>
 
               <div className="space-y-3">
-                {events.map((event) => (
+                {upcomingEvents.map((event) => (
                   <div
                     key={event.id}
                     className="group relative overflow-hidden rounded-xl border border-gray-100 bg-white p-5 shadow-sm transition-shadow hover:shadow-md"
@@ -172,7 +206,10 @@ export default async function HomePage() {
                     {/* Pink left accent bar */}
                     <div
                       className="absolute left-0 top-0 h-full w-1 rounded-l-xl"
-                      style={{ backgroundColor: event.isFull ? '#d1d5db' : '#E93998' }}
+                      style={{
+                        backgroundColor:
+                          event.registrationStatus === 'open' ? '#E93998' : '#d1d5db',
+                      }}
                     />
 
                     <div className="flex items-start justify-between gap-4">
@@ -180,16 +217,27 @@ export default async function HomePage() {
                         <div className="flex flex-col gap-2 sm:flex-row sm:items-center justify-between">
                           <div className="flex items-start sm:items-center gap-2">
                             <p className="font-semibold text-gray-900">{event.name}</p>
-                            {event.isFull ? (
-                              <span className="shrink-0 max-sm:mt-1 rounded-full px-2.5 py-0.5 text-xs font-semibold bg-gray-100 text-gray-500">
-                                Full
-                              </span>
-                            ) : (
+                            {event.registrationStatus === 'open' && (
                               <span
                                 className="shrink-0 max-sm:mt-1 rounded-full px-2.5 py-0.5 text-xs font-semibold"
                                 style={{ backgroundColor: '#fce7f3', color: '#be185d' }}
                               >
                                 Open
+                              </span>
+                            )}
+                            {event.registrationStatus === 'not_started' && (
+                              <span className="shrink-0 max-sm:mt-1 rounded-full px-2.5 py-0.5 text-xs font-semibold bg-amber-50 text-amber-700">
+                                Opens {new Date(event.registrationOpenDate!).toLocaleDateString('en-MY', { month: 'short', day: 'numeric' })}
+                              </span>
+                            )}
+                            {event.registrationStatus === 'full' && (
+                              <span className="shrink-0 max-sm:mt-1 rounded-full px-2.5 py-0.5 text-xs font-semibold bg-gray-100 text-gray-500">
+                                Full
+                              </span>
+                            )}
+                            {event.registrationStatus === 'closed' && (
+                              <span className="shrink-0 max-sm:mt-1 rounded-full px-2.5 py-0.5 text-xs font-semibold bg-gray-100 text-gray-500">
+                                Closed
                               </span>
                             )}
                           </div>
@@ -205,7 +253,7 @@ export default async function HomePage() {
                                   : `${event.registrationCount} registered`}
                               </span>
                             </div>
-                            {!event.isFull && event.slotsLeft !== null && (
+                            {event.registrationStatus === 'open' && event.slotsLeft !== null && (
                               <p
                                 className="mt-0.5 text-xs font-medium"
                                 style={{ color: '#E93998' }}
@@ -213,6 +261,129 @@ export default async function HomePage() {
                                 {event.slotsLeft} slot{event.slotsLeft !== 1 ? 's' : ''} left
                               </p>
                             )}
+                          </div>
+                        </div>
+
+                        <div className="mt-2 flex flex-wrap items-center gap-x-4 gap-y-1 text-sm text-gray-500">
+                          <span className="flex items-center gap-1.5">
+                            <CalendarDays className="h-3.5 w-3.5 shrink-0" />
+                            {new Date(event.date).toLocaleDateString('en-MY', {
+                              weekday: 'short',
+                              day: 'numeric',
+                              month: 'long',
+                              year: 'numeric',
+                            })}
+                          </span>
+                          <span className="flex items-center gap-1.5">
+                            <MapPin className="h-3.5 w-3.5 shrink-0" />
+                            {event.locationLink ? (
+                              <a
+                                href={event.locationLink}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="hover:underline font-medium text-pink-600 hover:text-pink-700"
+                              >
+                                {event.location}
+                              </a>
+                            ) : (
+                              event.location
+                            )}
+                          </span>
+                        </div>
+
+                        {/* Registration Window Dates info */}
+                        {(event.registrationOpenDate || event.registrationCloseDate) && (
+                          <div className="mt-2 flex flex-wrap items-center gap-x-4 text-xs text-gray-400">
+                            {event.registrationOpenDate && (
+                              <span className="flex items-center gap-1">
+                                <Clock className="h-3 w-3 shrink-0" />
+                                Reg Open:{' '}
+                                {new Date(event.registrationOpenDate).toLocaleDateString('en-MY', {
+                                  day: 'numeric',
+                                  month: 'short',
+                                  hour: '2-digit',
+                                  minute: '2-digit',
+                                })}
+                              </span>
+                            )}
+                            {event.registrationCloseDate && (
+                              <span className="flex items-center gap-1">
+                                <Clock className="h-3 w-3 shrink-0" />
+                                Reg Close:{' '}
+                                {new Date(event.registrationCloseDate).toLocaleDateString('en-MY', {
+                                  day: 'numeric',
+                                  month: 'short',
+                                  hour: '2-digit',
+                                  minute: '2-digit',
+                                })}
+                              </span>
+                            )}
+                          </div>
+                        )}
+
+                        {event.description && (
+                          <p className="mt-2 text-sm text-gray-400 line-clamp-2">
+                            {event.description}
+                          </p>
+                        )}
+
+                        {event.direction && (
+                          <div className="mt-3 border-t border-dashed border-gray-100 pt-3">
+                            <p className="text-xs font-semibold uppercase tracking-wider text-gray-400 mb-1">
+                              Directions
+                            </p>
+                            <RichTextRenderer content={event.direction as any} />
+                          </div>
+                        )}
+                      </div>
+                    </div>
+
+                    {/* Slot progress bar */}
+                    {event.capacity !== null && (
+                      <div className="mt-3 h-1.5 w-full overflow-hidden rounded-full bg-gray-100">
+                        <div
+                          className="h-full rounded-full transition-all duration-500"
+                          style={{
+                            width: `${Math.min(100, (event.registrationCount / event.capacity) * 100)}%`,
+                            backgroundColor:
+                              event.registrationStatus === 'open' ? '#E93998' : '#d1d5db',
+                          }}
+                        />
+                      </div>
+                    )}
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* ── Past Runs Section ── */}
+          {pastEvents.length > 0 && (
+            <div className="mt-10">
+              <div className="mb-4 flex items-center gap-2">
+                <CalendarDays className="h-4 w-4 text-gray-400" />
+                <h3 className="text-sm font-semibold uppercase tracking-widest text-gray-400">
+                  {pastEvents.length === 1 ? 'Past Run' : 'Past Runs'}
+                </h3>
+              </div>
+
+              <div className="space-y-3">
+                {pastEvents.map((event) => (
+                  <div
+                    key={event.id}
+                    className="group relative overflow-hidden rounded-xl border border-gray-100 bg-white p-5 shadow-sm opacity-90 transition-shadow hover:shadow-md"
+                  >
+                    {/* Gray left accent bar */}
+                    <div className="absolute left-0 top-0 h-full w-1 rounded-l-xl bg-gray-300" />
+
+                    <div className="flex items-start justify-between gap-4">
+                      <div className="w-full">
+                        <div className="flex flex-col gap-2 sm:flex-row sm:items-center justify-between">
+                          <div className="flex items-start sm:items-center gap-2">
+                            <p className="font-semibold text-gray-900">{event.name}</p>
+                            <span className="shrink-0 max-sm:mt-1 rounded-full px-2.5 py-0.5 text-xs font-semibold bg-gray-100 text-gray-500">
+                              Closed
+                            </span>
                           </div>
                         </div>
 
@@ -259,19 +430,6 @@ export default async function HomePage() {
                         )}
                       </div>
                     </div>
-
-                    {/* Slot progress bar */}
-                    {event.capacity !== null && (
-                      <div className="mt-3 h-1.5 w-full overflow-hidden rounded-full bg-gray-100">
-                        <div
-                          className="h-full rounded-full transition-all duration-500"
-                          style={{
-                            width: `${Math.min(100, (event.registrationCount / event.capacity) * 100)}%`,
-                            backgroundColor: event.isFull ? '#d1d5db' : '#E93998',
-                          }}
-                        />
-                      </div>
-                    )}
                   </div>
                 ))}
               </div>
