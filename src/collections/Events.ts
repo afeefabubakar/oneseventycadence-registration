@@ -5,7 +5,7 @@ export const Events: CollectionConfig = {
   slug: 'events',
   admin: {
     useAsTitle: 'name',
-    defaultColumns: ['name', 'date', 'location', 'capacity', 'isActive'],
+    defaultColumns: ['name', 'date', 'location', 'capacity', 'isActive', 'showEvent'],
   },
   access: {
     read: () => true, // Publicly readable for homepage
@@ -25,26 +25,6 @@ export const Events: CollectionConfig = {
       type: 'date',
       required: true,
       label: 'Event Date',
-      admin: {
-        date: {
-          pickerAppearance: 'dayAndTime',
-        },
-      },
-    },
-    {
-      name: 'registrationOpenDate',
-      type: 'date',
-      label: 'Registration Open Date',
-      admin: {
-        date: {
-          pickerAppearance: 'dayAndTime',
-        },
-      },
-    },
-    {
-      name: 'registrationCloseDate',
-      type: 'date',
-      label: 'Registration Close Date',
       admin: {
         date: {
           pickerAppearance: 'dayAndTime',
@@ -83,8 +63,42 @@ export const Events: CollectionConfig = {
     {
       name: 'isActive',
       type: 'checkbox',
-      label: 'Show on Registration Form',
+      label: 'Allow Registration',
       defaultValue: true,
+      admin: {
+        position: 'sidebar',
+      },
+    },
+    {
+      name: 'showEvent',
+      type: 'checkbox',
+      label: 'Show Event',
+      defaultValue: true,
+      admin: {
+        position: 'sidebar',
+      },
+    },
+    {
+      name: 'registrationOpenDate',
+      type: 'date',
+      label: 'Registration Open Date',
+      admin: {
+        position: 'sidebar',
+        date: {
+          pickerAppearance: 'dayAndTime',
+        },
+      },
+    },
+    {
+      name: 'registrationCloseDate',
+      type: 'date',
+      label: 'Registration Close Date',
+      admin: {
+        position: 'sidebar',
+        date: {
+          pickerAppearance: 'dayAndTime',
+        },
+      },
     },
   ],
 }
