@@ -19,17 +19,18 @@ async function getActiveEvents(): Promise<AttendanceEvent[]> {
 
   const eventsResult = await payload.find({
     collection: 'events',
-    where: { isActive: { equals: true } },
-    sort: 'date',
+    sort: '-date',
     limit: 50,
   })
 
-  return eventsResult.docs.map((event) => ({
-    id: String(event.id),
-    name: event.name,
-    date: event.date as string,
-    location: event.location,
-  }))
+  return eventsResult.docs
+    .filter((event) => (event.showEvent as boolean | undefined) !== false)
+    .map((event) => ({
+      id: String(event.id),
+      name: event.name,
+      date: event.date as string,
+      location: event.location,
+    }))
 }
 
 export default async function AttendancePage() {
