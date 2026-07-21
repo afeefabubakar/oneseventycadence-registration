@@ -7,7 +7,7 @@ import { useState } from 'react'
 import { toast } from 'sonner'
 import { Loader2, CheckCircle2, User, Mail, Phone, CalendarDays } from 'lucide-react'
 
-import { formatEventDateTime } from '@/lib/utils'
+import { formatEventDateTime, formatMalaysiaDate } from '@/lib/utils'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import {
@@ -33,7 +33,10 @@ const formSchema = z.object({
   phone: z
     .string()
     .min(8, 'Phone number must be at least 8 characters')
-    .regex(/^[+\d\s\-()]{8,20}$/, 'Please enter a valid phone number (e.g. 0123456789 or +60123456789)'),
+    .regex(
+      /^[+\d\s\-()]{8,20}$/,
+      'Please enter a valid phone number (e.g. 0123456789 or +60123456789)',
+    ),
   eventId: z.string().min(1, 'Please select an event'),
 })
 
@@ -243,10 +246,10 @@ export function RegistrationForm({ events }: RegistrationFormProps) {
                                 <span className="ml-2 text-xs font-semibold text-amber-600">
                                   · Reg Opens{' '}
                                   {event.registrationOpenDate
-                                    ? new Date(event.registrationOpenDate).toLocaleDateString(
-                                        'en-MY',
-                                        { month: 'short', day: 'numeric' },
-                                      )
+                                    ? formatMalaysiaDate(event.registrationOpenDate, {
+                                        month: 'short',
+                                        day: 'numeric',
+                                      })
                                     : 'Soon'}
                                 </span>
                               )}
@@ -264,7 +267,7 @@ export function RegistrationForm({ events }: RegistrationFormProps) {
                             <span className="text-xs text-muted-foreground">
                               {formatEventDateTime(event.date, { monthFormat: 'short' })}
                             </span>
-                            <span className="text-xs text-muted-foreground whitespace-normal break-words">
+                            <span className="text-xs text-muted-foreground whitespace-normal wrap-break-word">
                               {event.location}
                             </span>
                           </div>

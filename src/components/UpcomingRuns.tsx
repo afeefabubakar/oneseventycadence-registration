@@ -1,7 +1,7 @@
 import { CalendarDays, MapPin, Users, Clock } from 'lucide-react'
 import { RichTextRenderer } from '@/components/RichTextRenderer'
 import { EventItem } from '@/types/event'
-import { formatEventDateTime } from '@/lib/utils'
+import { formatEventDateTime, formatMalaysiaDate, formatMalaysiaTime } from '@/lib/utils'
 
 interface UpcomingRunsProps {
   events: EventItem[]
@@ -48,11 +48,7 @@ export function UpcomingRuns({ events }: UpcomingRunsProps) {
                     )}
                     {event.registrationStatus === 'not_started' && (
                       <span className="shrink-0 max-sm:mt-1 rounded-full px-2.5 py-0.5 text-xs font-semibold bg-amber-50 text-amber-700">
-                        Opens{' '}
-                        {new Date(event.registrationOpenDate!).toLocaleDateString('en-MY', {
-                          month: 'short',
-                          day: 'numeric',
-                        })}
+                        Opens {formatMalaysiaDate(event.registrationOpenDate!, { month: 'short', day: 'numeric' })}
                       </span>
                     )}
                     {event.registrationStatus === 'full' && (
@@ -117,36 +113,22 @@ export function UpcomingRuns({ events }: UpcomingRunsProps) {
                       <span className="flex items-center gap-1">
                         <Clock className="h-3 w-3 shrink-0" />
                         Reg Open:{' '}
-                        {new Date(event.registrationOpenDate).toLocaleDateString('en-MY', {
+                        {formatMalaysiaDate(event.registrationOpenDate, {
                           day: 'numeric',
                           month: 'short',
                         })}
-                        ,{' '}
-                        {new Date(event.registrationOpenDate)
-                          .toLocaleTimeString('en-MY', {
-                            hour: 'numeric',
-                            minute: '2-digit',
-                            hour12: true,
-                          })
-                          .toUpperCase()}
+                        , {formatMalaysiaTime(event.registrationOpenDate)}
                       </span>
                     )}
                     {event.registrationCloseDate && (
                       <span className="flex items-center gap-1">
                         <Clock className="h-3 w-3 shrink-0" />
                         Reg Close:{' '}
-                        {new Date(event.registrationCloseDate).toLocaleDateString('en-MY', {
+                        {formatMalaysiaDate(event.registrationCloseDate, {
                           day: 'numeric',
                           month: 'short',
                         })}
-                        ,{' '}
-                        {new Date(event.registrationCloseDate)
-                          .toLocaleTimeString('en-MY', {
-                            hour: 'numeric',
-                            minute: '2-digit',
-                            hour12: true,
-                          })
-                          .toUpperCase()}
+                        , {formatMalaysiaTime(event.registrationCloseDate)}
                       </span>
                     )}
                   </div>

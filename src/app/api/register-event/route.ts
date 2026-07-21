@@ -114,6 +114,7 @@ export async function POST(req: NextRequest) {
         year: 'numeric',
         hour: '2-digit',
         minute: '2-digit',
+        timeZone: 'Asia/Kuala_Lumpur',
       })
       return NextResponse.json(
         { error: `Registration for this event opens on ${openDateFormatted}.` },
