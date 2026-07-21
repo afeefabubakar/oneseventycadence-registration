@@ -14,7 +14,7 @@ export function PastRuns({ events }: PastRunsProps) {
       <div className="mb-4 flex items-center gap-2">
         <CalendarDays className="h-4 w-4 text-gray-400" />
         <h3 className="text-sm font-semibold uppercase tracking-widest text-gray-400">
-          {events.length === 1 ? 'Past Run' : 'Past Runs'}
+          {events.length === 1 ? 'Past Event' : 'Past Events'}
         </h3>
       </div>
 
@@ -45,7 +45,7 @@ export function PastRuns({ events }: PastRunsProps) {
                   </div>
                   <div className="flex items-start gap-1.5">
                     <MapPin className="h-3.5 w-3.5 shrink-0 mt-0.5" />
-                    <span className="break-words">
+                    <span className="wrap-break-word">
                       {event.locationLink ? (
                         <a
                           href={event.locationLink}
@@ -63,9 +63,7 @@ export function PastRuns({ events }: PastRunsProps) {
                 </div>
 
                 {event.description && (
-                  <p className="mt-2 text-sm text-gray-400 line-clamp-2">
-                    {event.description}
-                  </p>
+                  <p className="mt-2 text-sm text-gray-400 line-clamp-2">{event.description}</p>
                 )}
               </div>
             </div>

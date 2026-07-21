@@ -15,7 +15,7 @@ export function UpcomingRuns({ events }: UpcomingRunsProps) {
       <div className="mb-4 flex items-center gap-2">
         <CalendarDays className="h-4 w-4" style={{ color: '#E93998' }} />
         <h3 className="text-sm font-semibold uppercase tracking-widest text-gray-500">
-          {events.length === 1 ? 'Upcoming Run' : 'Upcoming Runs'}
+          {events.length === 1 ? 'Upcoming Event' : 'Upcoming Events'}
         </h3>
       </div>
 
