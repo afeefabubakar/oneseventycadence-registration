@@ -20,11 +20,32 @@ async function getActiveEvents(): Promise<AttendanceEvent[]> {
   const eventsResult = await payload.find({
     collection: 'events',
     sort: '-date',
-    limit: 50,
+    limit: 100,
   })
 
+  const now = new Date()
+  const fortyEightHoursAgo = new Date(now.getTime() - 48 * 60 * 60 * 1000)
+  const endOfToday = new Date(
+    now.getFullYear(),
+    now.getMonth(),
+    now.getDate(),
+    23,
+    59,
+    59,
+    999,
+  )
+
   return eventsResult.docs
-    .filter((event) => (event.showEvent as boolean | undefined) !== false)
+    .filter((event) => {
+      if ((event.showEvent as boolean | undefined) === false) return false
+      if (!event.date) return false
+
+      const eventDate = new Date(event.date as string)
+      return (
+        eventDate.getTime() >= fortyEightHoursAgo.getTime() &&
+        eventDate.getTime() <= endOfToday.getTime()
+      )
+    })
     .map((event) => ({
       id: String(event.id),
       name: event.name,
