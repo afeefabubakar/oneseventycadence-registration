@@ -92,7 +92,7 @@ export function RegistrationsListHeader() {
 
   return (
     <div style={{ display: 'flex', gap: '16px', flexWrap: 'wrap', marginBottom: '24px' }}>
-      {/* Total Card */}
+      {/* Registrations Card */}
       <div
         style={{
           flex: '1',
@@ -113,7 +113,7 @@ export function RegistrationsListHeader() {
             margin: 0,
           }}
         >
-          Total
+          Registrations
         </h4>
         <p
           style={{
