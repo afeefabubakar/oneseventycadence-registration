@@ -1,6 +1,7 @@
 import { getPayload } from 'payload'
 import configPromise from '@payload-config'
 import Image from 'next/image'
+import Link from 'next/link'
 import { Toaster } from '@/components/ui/sonner'
 import { RegistrationSection } from '@/components/RegistrationSection'
 import { UpcomingRuns } from '@/components/UpcomingRuns'
@@ -151,9 +152,14 @@ export default async function HomePage() {
           <PastRuns events={pastEvents} />
 
           {/* Footer */}
-          <p className="mt-10 text-center text-xs text-gray-300">
-            © {new Date().getFullYear()} oneseventycadence · All rights reserved
-          </p>
+          <footer className="mt-10 text-center text-xs text-gray-400 space-y-2">
+            <p>© {new Date().getFullYear()} oneseventycadence · All rights reserved</p>
+            <p>
+              <Link href="/privacy" className="hover:text-gray-600 transition-colors underline">
+                PDPA Privacy Notice / Notis Privasi
+              </Link>
+            </p>
+          </footer>
         </div>
       </div>
     </>

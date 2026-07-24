@@ -5,6 +5,7 @@ import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
+import Link from 'next/link'
 import { toast } from 'sonner'
 import { Loader2, CheckCircle2, User, Mail, Phone, CalendarDays } from 'lucide-react'
 
@@ -284,6 +285,19 @@ export function RegistrationForm({ events }: RegistrationFormProps) {
             </FormItem>
           )}
         />
+
+        {/* PDPA Consent Notice */}
+        <p className="text-[11px] text-muted-foreground text-center my-3 leading-normal">
+          By submitting this form, you consent to oneseventycadence processing your personal data in accordance with our{' '}
+          <Link
+            href="/privacy"
+            target="_blank"
+            className="text-[#E93998] font-semibold hover:underline"
+          >
+            PDPA Privacy Notice
+          </Link>
+          .
+        </p>
 
         <Button type="submit" className="w-full h-11 mt-2 font-semibold" disabled={isSubmitting}>
           {isSubmitting ? (
