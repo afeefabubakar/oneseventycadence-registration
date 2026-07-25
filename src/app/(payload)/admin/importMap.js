@@ -21,8 +21,11 @@ import { StrikethroughFeatureClient as StrikethroughFeatureClient_e70f5e05f09f93
 import { UnderlineFeatureClient as UnderlineFeatureClient_e70f5e05f09f93e00b997edb1ef0c864 } from '@payloadcms/richtext-lexical/client'
 import { BoldFeatureClient as BoldFeatureClient_e70f5e05f09f93e00b997edb1ef0c864 } from '@payloadcms/richtext-lexical/client'
 import { ItalicFeatureClient as ItalicFeatureClient_e70f5e05f09f93e00b997edb1ef0c864 } from '@payloadcms/richtext-lexical/client'
+import { EventRegistrationsList as EventRegistrationsList_32a1f78f1dc89138e2102371fc6aa639 } from '../../../components/EventRegistrationsList'
 import { AttendedCell as AttendedCell_bab101bb381f5f8dde53e97e143c8ccb } from '../../../components/AttendedCell'
 import { RegistrationsListHeader as RegistrationsListHeader_3cbac6e2c4ffed90348ca0df25957068 } from '../../../components/RegistrationsListHeader'
+import { BrandIcon as BrandIcon_cc41ec678bb1aa65fe51d386246dab4b } from '../../../components/BrandGraphics'
+import { BrandLogo as BrandLogo_cc41ec678bb1aa65fe51d386246dab4b } from '../../../components/BrandGraphics'
 import { CollectionCards as CollectionCards_f9c02e79a4aed9a3924487c0cd4cafb1 } from '@payloadcms/next/rsc'
 
 /** @type import('payload').ImportMap */
@@ -50,7 +53,10 @@ export const importMap = {
   "@payloadcms/richtext-lexical/client#UnderlineFeatureClient": UnderlineFeatureClient_e70f5e05f09f93e00b997edb1ef0c864,
   "@payloadcms/richtext-lexical/client#BoldFeatureClient": BoldFeatureClient_e70f5e05f09f93e00b997edb1ef0c864,
   "@payloadcms/richtext-lexical/client#ItalicFeatureClient": ItalicFeatureClient_e70f5e05f09f93e00b997edb1ef0c864,
+  "/components/EventRegistrationsList#EventRegistrationsList": EventRegistrationsList_32a1f78f1dc89138e2102371fc6aa639,
   "/components/AttendedCell#AttendedCell": AttendedCell_bab101bb381f5f8dde53e97e143c8ccb,
   "/components/RegistrationsListHeader#RegistrationsListHeader": RegistrationsListHeader_3cbac6e2c4ffed90348ca0df25957068,
+  "/components/BrandGraphics#BrandIcon": BrandIcon_cc41ec678bb1aa65fe51d386246dab4b,
+  "/components/BrandGraphics#BrandLogo": BrandLogo_cc41ec678bb1aa65fe51d386246dab4b,
   "@payloadcms/next/rsc#CollectionCards": CollectionCards_f9c02e79a4aed9a3924487c0cd4cafb1
 }

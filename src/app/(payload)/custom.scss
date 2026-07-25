@@ -1,0 +1,103 @@
+/* --- Brand Coding overrides for the Payload Admin Panel --- */
+:root {
+  /* Brand Pink theme overrides */
+  --theme-primary: #E93998;
+  --theme-primary-50: #fdf2f8;
+  --theme-primary-100: #fce7f3;
+  --theme-primary-200: #fbcfe8;
+  --theme-primary-300: #f9a8d4;
+  --theme-primary-400: #f472b6;
+  --theme-primary-500: #E93998;
+  --theme-primary-600: #db2777;
+  --theme-primary-700: #be185d;
+  --theme-primary-800: #9d174d;
+  --theme-primary-900: #831843;
+  --theme-primary-950: #500724;
+
+  /* Focus ring */
+  --theme-focus: #E93998;
+  
+  /* Link hover states */
+  --theme-link-hover: #db2777;
+}
+
+[data-theme="dark"] {
+  --theme-primary: #E93998;
+  --theme-primary-500: #E93998;
+  --theme-focus: #E93998;
+}
+
+/* Style primary buttons to use our brand pink */
+.btn--style-primary, 
+button.btn--style-primary,
+.popup-button--primary {
+  background-color: #E93998 !important;
+  border-color: #E93998 !important;
+  color: #ffffff !important;
+}
+
+.btn--style-primary:hover,
+button.btn--style-primary:hover {
+  background-color: #db2777 !important;
+  border-color: #db2777 !important;
+}
+
+/* Sidebar navigation links active / hover states */
+@layer payload-default {
+  .nav {
+    .nav__link:hover {
+      border-left-color: #E93998 !important;
+      color: #E93998 !important;
+    }
+    
+    .nav__link--active {
+      border-left-color: #E93998 !important;
+      color: #E93998 !important;
+      font-weight: 600 !important;
+    }
+  }
+}
+
+/* --- Event Registrations Table Styling --- */
+.event-registrations-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 13px;
+  line-height: 1.5;
+  color: var(--theme-text, #0f172a);
+  
+  th {
+    background-color: transparent;
+    border-bottom: 1px solid var(--theme-elevation-150, #cbd5e1);
+    color: var(--theme-elevation-600, #475569);
+    font-weight: 600;
+    padding: 12px 16px;
+    text-align: left;
+  }
+  
+  tr {
+    border-bottom: 1px solid var(--theme-elevation-100, #f1f5f9);
+    transition: background-color 0.15s ease;
+    
+    &:hover {
+      background-color: var(--theme-elevation-50, #f8fafc);
+    }
+  }
+  
+  td {
+    padding: 14px 16px;
+    vertical-align: middle;
+  }
+
+  a {
+    color: var(--theme-text, #0f172a);
+    text-decoration: none;
+    font-weight: 600;
+    transition: color 0.15s ease;
+    
+    &:hover {
+      color: #E93998 !important;
+    }
+  }
+}
+
