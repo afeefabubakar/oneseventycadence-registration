@@ -100,5 +100,14 @@ export const Events: CollectionConfig = {
         },
       },
     },
+    {
+      name: 'registrationsList',
+      type: 'ui',
+      admin: {
+        components: {
+          Field: '/components/EventRegistrationsList#EventRegistrationsList',
+        },
+      },
+    },
   ],
 }
