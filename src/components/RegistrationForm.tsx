@@ -494,6 +494,7 @@ export function RegistrationForm({ events }: RegistrationFormProps) {
                       width={800}
                       height={800}
                       className="w-full h-auto rounded-lg block border-0"
+                      unoptimized
                     />
                   </a>
                 </div>
