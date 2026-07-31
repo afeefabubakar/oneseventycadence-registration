@@ -101,6 +101,24 @@ export const Events: CollectionConfig = {
       },
     },
     {
+      name: 'paymentQrImage',
+      type: 'upload',
+      relationTo: 'media',
+      required: false,
+      label: 'Payment QR Code Image',
+      admin: {
+        description: 'Upload or select a payment / DuitNow QR code image from Media',
+      },
+    },
+    {
+      name: 'paymentInstructions',
+      type: 'textarea',
+      label: 'Payment Instructions',
+      admin: {
+        placeholder: 'e.g. Please scan the DuitNow QR code above and transfer the registration fee.',
+      },
+    },
+    {
       name: 'registrationsList',
       type: 'ui',
       admin: {

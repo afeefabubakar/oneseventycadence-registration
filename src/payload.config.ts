@@ -10,6 +10,7 @@ import { Users } from './collections/Users'
 import { Media } from './collections/Media'
 import { Events } from './collections/Events'
 import { Registrations } from './collections/Registrations'
+import { Receipts } from './collections/Receipts'
 
 const filename = fileURLToPath(import.meta.url)
 const dirname = path.dirname(filename)
@@ -27,7 +28,7 @@ export default buildConfig({
       },
     },
   },
-  collections: [Users, Media, Events, Registrations],
+  collections: [Users, Media, Events, Registrations, Receipts],
   editor: lexicalEditor(),
   secret: process.env.PAYLOAD_SECRET || '',
   typescript: {
@@ -43,6 +44,7 @@ export default buildConfig({
     s3Storage({
       collections: {
         media: true,
+        receipts: true,
       },
       bucket: process.env.S3_BUCKET || '',
       config: {

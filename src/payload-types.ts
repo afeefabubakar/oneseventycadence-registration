@@ -71,6 +71,7 @@ export interface Config {
     media: Media;
     events: Event;
     registrations: Registration;
+    receipts: Receipt;
     'payload-kv': PayloadKv;
     'payload-locked-documents': PayloadLockedDocument;
     'payload-preferences': PayloadPreference;
@@ -82,6 +83,7 @@ export interface Config {
     media: MediaSelect<false> | MediaSelect<true>;
     events: EventsSelect<false> | EventsSelect<true>;
     registrations: RegistrationsSelect<false> | RegistrationsSelect<true>;
+    receipts: ReceiptsSelect<false> | ReceiptsSelect<true>;
     'payload-kv': PayloadKvSelect<false> | PayloadKvSelect<true>;
     'payload-locked-documents': PayloadLockedDocumentsSelect<false> | PayloadLockedDocumentsSelect<true>;
     'payload-preferences': PayloadPreferencesSelect<false> | PayloadPreferencesSelect<true>;
@@ -196,6 +198,11 @@ export interface Event {
   showEvent?: boolean | null;
   registrationOpenDate?: string | null;
   registrationCloseDate?: string | null;
+  /**
+   * Upload or select a payment / DuitNow QR code image from Media
+   */
+  paymentQrImage?: (number | null) | Media;
+  paymentInstructions?: string | null;
   updatedAt: string;
   createdAt: string;
 }
@@ -209,10 +216,38 @@ export interface Registration {
   email: string;
   phone: string;
   event: number | Event;
-  status: 'confirmed' | 'cancelled';
+  /**
+   * Uploaded payment proof / receipt screenshot
+   */
+  receipt?: (number | null) | Receipt;
+  status: 'confirmed' | 'pending' | 'cancelled';
   attended?: boolean | null;
   updatedAt: string;
   createdAt: string;
+}
+/**
+ * Payment receipts uploaded by registrants
+ *
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "receipts".
+ */
+export interface Receipt {
+  id: number;
+  /**
+   * Internal notes regarding payment verification
+   */
+  notes?: string | null;
+  updatedAt: string;
+  createdAt: string;
+  url?: string | null;
+  thumbnailURL?: string | null;
+  filename?: string | null;
+  mimeType?: string | null;
+  filesize?: number | null;
+  width?: number | null;
+  height?: number | null;
+  focalX?: number | null;
+  focalY?: number | null;
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
@@ -253,6 +288,10 @@ export interface PayloadLockedDocument {
     | ({
         relationTo: 'registrations';
         value: number | Registration;
+      } | null)
+    | ({
+        relationTo: 'receipts';
+        value: number | Receipt;
       } | null);
   globalSlug?: string | null;
   user: {
@@ -352,6 +391,8 @@ export interface EventsSelect<T extends boolean = true> {
   showEvent?: T;
   registrationOpenDate?: T;
   registrationCloseDate?: T;
+  paymentQrImage?: T;
+  paymentInstructions?: T;
   updatedAt?: T;
   createdAt?: T;
 }
@@ -364,10 +405,29 @@ export interface RegistrationsSelect<T extends boolean = true> {
   email?: T;
   phone?: T;
   event?: T;
+  receipt?: T;
   status?: T;
   attended?: T;
   updatedAt?: T;
   createdAt?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "receipts_select".
+ */
+export interface ReceiptsSelect<T extends boolean = true> {
+  notes?: T;
+  updatedAt?: T;
+  createdAt?: T;
+  url?: T;
+  thumbnailURL?: T;
+  filename?: T;
+  mimeType?: T;
+  filesize?: T;
+  width?: T;
+  height?: T;
+  focalX?: T;
+  focalY?: T;
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema

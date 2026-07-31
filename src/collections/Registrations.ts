@@ -5,7 +5,7 @@ export const Registrations: CollectionConfig = {
   slug: 'registrations',
   admin: {
     useAsTitle: 'name',
-    defaultColumns: ['name', 'email', 'phone', 'event', 'status', 'attended', 'createdAt'],
+    defaultColumns: ['name', 'email', 'phone', 'event', 'status', 'receipt', 'attended', 'createdAt'],
     components: {
       beforeListTable: [
         '/components/RegistrationsListHeader#RegistrationsListHeader',
@@ -58,6 +58,16 @@ export const Registrations: CollectionConfig = {
       label: 'Event',
     },
     {
+      name: 'receipt',
+      type: 'upload',
+      relationTo: 'receipts',
+      required: false,
+      label: 'Payment Receipt',
+      admin: {
+        description: 'Uploaded payment proof / receipt screenshot',
+      },
+    },
+    {
       name: 'status',
       type: 'select',
       required: true,
@@ -65,6 +75,7 @@ export const Registrations: CollectionConfig = {
       label: 'Status',
       options: [
         { label: 'Confirmed', value: 'confirmed' },
+        { label: 'Pending Verification', value: 'pending' },
         { label: 'Cancelled', value: 'cancelled' },
       ],
     },
