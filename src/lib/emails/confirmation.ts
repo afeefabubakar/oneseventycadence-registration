@@ -68,7 +68,8 @@ function serializeLexicalToHtml(content: any): string {
     return childrenHtml
   }
 
-  return content.root.children.map(serializeNode).join('')
+  const rawHtml = content.root.children.map(serializeNode).join('').trim()
+  return rawHtml.replace(/<[^>]*>/g, '').trim() ? rawHtml : ''
 }
 
 interface ConfirmationEmailProps {
@@ -81,6 +82,7 @@ interface ConfirmationEmailProps {
   eventLocationLink?: string | null
   eventDescription?: string | null
   eventDirection?: any | null
+  isPendingVerification?: boolean
 }
 
 export function confirmationEmailHtml({
@@ -93,8 +95,19 @@ export function confirmationEmailHtml({
   eventLocationLink,
   eventDescription,
   eventDirection,
+  isPendingVerification = false,
 }: ConfirmationEmailProps): string {
-  const directionHtml = eventDirection ? serializeLexicalToHtml(eventDirection) : null
+  const directionHtml = eventDirection ? serializeLexicalToHtml(eventDirection) : ''
+  const hasDescription = !!eventDescription && eventDescription.trim().length > 0
+  const hasDirection = !!directionHtml && directionHtml.trim().length > 0
+
+  const headerTitle = isPendingVerification ? 'Registration Received! ⏳' : "You're In! 🎉"
+  const headerSubtitle = isPendingVerification
+    ? 'Payment verification in progress'
+    : 'Your registration has been confirmed'
+  const introText = isPendingVerification
+    ? `Hey <strong>${name}</strong>, thank you for registering and uploading your payment receipt! Our team is currently verifying your payment. Here is a summary of your registration:`
+    : `Hey <strong>${name}</strong>, we're excited to have you! Here's a summary of your registration:`
 
   return `
 <!DOCTYPE html>
@@ -102,7 +115,7 @@ export function confirmationEmailHtml({
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Registration Confirmed</title>
+  <title>${isPendingVerification ? 'Registration Received - Pending Verification' : 'Registration Confirmed'}</title>
 </head>
 <body style="margin:0;padding:0;background-color:#f4f4f5;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;">
   <table width="100%" cellpadding="0" cellspacing="0" style="background-color:#f4f4f5;padding:40px 0;">
@@ -114,8 +127,8 @@ export function confirmationEmailHtml({
           <tr>
             <td style="background:linear-gradient(135deg,#E93998 0%,#ff73b9 100%);padding:48px 40px;text-align:center;">
               <p style="margin:0 0 8px 0;font-size:13px;font-weight:600;letter-spacing:3px;text-transform:uppercase;color:rgba(255,255,255,0.9);">oneseventycadence</p>
-              <h1 style="margin:0 0 8px 0;font-size:32px;font-weight:700;color:#ffffff;letter-spacing:-0.5px;">You're In! 🎉</h1>
-              <p style="margin:0;font-size:16px;color:rgba(255,255,255,0.95);">Your registration has been confirmed</p>
+              <h1 style="margin:0 0 8px 0;font-size:32px;font-weight:700;color:#ffffff;letter-spacing:-0.5px;">${headerTitle}</h1>
+              <p style="margin:0;font-size:16px;color:rgba(255,255,255,0.95);">${headerSubtitle}</p>
             </td>
           </tr>
 
@@ -124,7 +137,7 @@ export function confirmationEmailHtml({
             <td style="padding:40px;">
 
               <p style="margin:0 0 24px 0;font-size:16px;color:#374151;line-height:1.6;">
-                Hey <strong>${name}</strong>, we're excited to have you! Here's a summary of your registration:
+                ${introText}
               </p>
 
               <!-- Event Card -->
@@ -158,7 +171,7 @@ export function confirmationEmailHtml({
                         </td>
                       </tr>
                       ${
-                        eventDescription
+                        hasDescription
                           ? `<tr>
                         <td style="padding:8px 0;border-top:1px solid #fce7f3;vertical-align:top;width:40%;">
                           <span style="font-size:13px;color:#6b7280;font-weight:500;">ℹ️ Details</span>
@@ -170,7 +183,7 @@ export function confirmationEmailHtml({
                           : ''
                       }
                       ${
-                        directionHtml
+                        hasDirection
                           ? `<tr>
                         <td style="padding:8px 0;border-top:1px solid #fce7f3;vertical-align:top;width:40%;">
                           <span style="font-size:13px;color:#6b7280;font-weight:500;">📍 Directions</span>
