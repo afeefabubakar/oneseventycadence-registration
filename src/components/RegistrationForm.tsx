@@ -514,6 +514,7 @@ export function RegistrationForm({ events }: RegistrationFormProps) {
                               alt="Receipt Preview"
                               fill
                               className="object-cover"
+                              unoptimized
                             />
                           </div>
                         ) : (
