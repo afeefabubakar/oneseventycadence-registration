@@ -113,7 +113,9 @@ export function UpcomingRuns({ events }: UpcomingRunsProps) {
               </div>
             )}
 
-            {event.description && <p className="mt-2 text-sm text-gray-400">{event.description}</p>}
+            {event.description && (
+              <p className="mt-2 text-sm text-gray-400 whitespace-pre-line">{event.description}</p>
+            )}
 
             {event.direction && (
               <div className="mt-3 border-t border-dashed border-gray-100 pt-3">

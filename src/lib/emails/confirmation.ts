@@ -98,6 +98,9 @@ export function confirmationEmailHtml({
   isPendingVerification = false,
 }: ConfirmationEmailProps): string {
   const directionHtml = eventDirection ? serializeLexicalToHtml(eventDirection) : ''
+  const formattedDescription = eventDescription
+    ? eventDescription.replace(/\r\n|\r|\n/g, '<br />')
+    : ''
   const hasDescription = !!eventDescription && eventDescription.trim().length > 0
   const hasDirection = !!directionHtml && directionHtml.trim().length > 0
 
@@ -177,7 +180,7 @@ export function confirmationEmailHtml({
                           <span style="font-size:13px;color:#6b7280;font-weight:500;">ℹ️ Details</span>
                         </td>
                         <td style="padding:8px 0;border-top:1px solid #fce7f3;">
-                          <span style="font-size:14px;color:#374151;line-height:1.5;">${eventDescription}</span>
+                          <div style="font-size:14px;color:#374151;line-height:1.5;white-space:pre-line;">${formattedDescription}</div>
                         </td>
                       </tr>`
                           : ''
