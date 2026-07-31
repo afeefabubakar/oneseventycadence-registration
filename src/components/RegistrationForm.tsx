@@ -108,7 +108,7 @@ export function RegistrationForm({ events }: RegistrationFormProps) {
   const watchEventId = watch('eventId')
 
   const selectedEvent = events.find((e) => e.id === watchEventId)
-  const requiresPayment = !!selectedEvent?.paymentQrImageUrl
+  const requiresPayment = selectedEvent?.requiresPayment ?? !!selectedEvent?.paymentQrImageUrl
 
   // Check if all required user contact details are validly filled
   const isEmailValid = z.string().email().safeParse(watchEmail).success
@@ -363,7 +363,7 @@ export function RegistrationForm({ events }: RegistrationFormProps) {
                         ? event.registrationStatus !== 'open'
                         : event.isFull
 
-                      const hasPayment = !!event.paymentQrImageUrl
+                      const hasPayment = event.requiresPayment ?? !!event.paymentQrImageUrl
 
                       return (
                         <SelectItem
@@ -403,7 +403,9 @@ export function RegistrationForm({ events }: RegistrationFormProps) {
                               {hasPayment && (
                                 <span className="inline-flex items-center gap-1 rounded-full bg-pink-50 dark:bg-pink-950/60 px-2 py-0.5 text-[10px] font-semibold text-[#E93998] border border-pink-200 dark:border-pink-800">
                                   <QrCode className="h-3 w-3" />
-                                  Commitment Fee
+                                  {event.amount != null && event.amount > 0
+                                    ? `Fee: RM ${event.amount}`
+                                    : 'Commitment Fee'}
                                 </span>
                               )}
                             </span>
@@ -479,8 +481,22 @@ export function RegistrationForm({ events }: RegistrationFormProps) {
                   )}
                 </div>
 
+                {/* Dedicated Commitment Fee Box */}
+                {selectedEvent?.amount != null && selectedEvent.amount > 0 && (
+                  <div className="rounded-xl bg-pink-100/80 dark:bg-pink-950/60 border border-pink-200 dark:border-pink-800 p-3.5 shadow-xs">
+                    <div className="text-center">
+                      <p className="text-[11px] font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                        Commitment Fee Amount
+                      </p>
+                      <p className="text-xl font-extrabold text-[#E93998] leading-tight">
+                        RM {selectedEvent.amount.toFixed(2)}
+                      </p>
+                    </div>
+                  </div>
+                )}
+
                 {/* QR Image with White BG Container and No Bottom Border */}
-                <div className="w-full rounded-xl p-3 flex flex-col items-center justify-center shadow-none my-1">
+                <div className="w-full rounded-xl mb-4 flex flex-col items-center justify-center shadow-none my-1">
                   <a
                     href={selectedEvent.paymentQrImageUrl}
                     target="_blank"

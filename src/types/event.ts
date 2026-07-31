@@ -18,4 +18,6 @@ export interface EventItem {
   registrationStatus: 'open' | 'not_started' | 'closed' | 'full'
   paymentQrImageUrl?: string | null
   paymentInstructions?: string | null
+  requiresPayment?: boolean
+  amount?: number | null
 }

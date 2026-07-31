@@ -188,8 +188,11 @@ export async function POST(req: NextRequest) {
       )
     }
 
-    // Check if event requires payment (has payment QR image)
-    const requiresPayment = !!event.paymentQrImage
+    // Check if event requires payment (checkbox enabled or has payment QR image)
+    const requiresPayment =
+      typeof event.requiresPayment === 'boolean'
+        ? event.requiresPayment
+        : !!event.paymentQrImage
 
     if (requiresPayment && !receiptFile) {
       return NextResponse.json(
@@ -229,7 +232,7 @@ export async function POST(req: NextRequest) {
 
     const regStatus = requiresPayment ? 'pending' : 'confirmed'
 
-    // Save registration with receipt link & status
+    // Save registration with receipt link, amount & status
     await payload.create({
       collection: 'registrations',
       data: {
@@ -237,6 +240,7 @@ export async function POST(req: NextRequest) {
         email: cleanEmail,
         phone,
         event: parseInt(eventId, 10),
+        amount: typeof event.amount === 'number' ? event.amount : undefined,
         status: regStatus,
         receipt: receiptDocId ? (typeof receiptDocId === 'string' ? parseInt(receiptDocId, 10) : receiptDocId) : undefined,
       },
