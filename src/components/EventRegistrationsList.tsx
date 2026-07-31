@@ -23,7 +23,8 @@ interface Registration {
   name: string
   email: string
   phone: string
-  status: 'confirmed' | 'cancelled'
+  amount?: number
+  status: 'confirmed' | 'cancelled' | 'pending' | 'declined'
   attended: boolean
   createdAt: string
 }
@@ -404,6 +405,7 @@ export function EventRegistrationsList() {
                 <tr>
                   <th>Name</th>
                   <th>Contact</th>
+                  <th style={{ width: '90px' }}>Amount</th>
                   <th style={{ width: '100px', textAlign: 'center' }}>Attended</th>
                   <th style={{ width: '150px' }}>Registered At</th>
                   <th style={{ width: '60px' }}></th>
@@ -460,6 +462,11 @@ export function EventRegistrationsList() {
                             {reg.phone}
                           </a>
                         </div>
+                      </td>
+
+                      {/* Amount */}
+                      <td style={{ fontWeight: 600, color: 'var(--theme-elevation-800, #1e293b)' }}>
+                        {reg.amount != null ? `RM ${reg.amount}` : '-'}
                       </td>
 
                       {/* Attended Checkbox */}

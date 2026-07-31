@@ -1,5 +1,6 @@
 import nodemailer from 'nodemailer'
 import { confirmationEmailHtml } from './confirmation'
+import { rejectionEmailHtml } from './rejection'
 
 export async function sendEmailViaBrevo({
   to,
@@ -101,6 +102,52 @@ export async function sendConfirmationEmailHelper({
     eventDescription: event.description ?? null,
     eventDirection: event.direction ?? null,
     isPendingVerification,
+  })
+
+  await sendEmailViaBrevo({
+    to: email,
+    subject: emailSubject,
+    html,
+  })
+}
+
+export async function sendRejectionEmailHelper({
+  name,
+  email,
+  phone,
+  event,
+  reason,
+}: {
+  name: string
+  email: string
+  phone: string
+  event: any
+  reason?: string | null
+}) {
+  const eventDate = event.date
+    ? new Date(event.date).toLocaleDateString('en-MY', {
+        weekday: 'long',
+        year: 'numeric',
+        month: 'long',
+        day: 'numeric',
+        hour: '2-digit',
+        minute: '2-digit',
+        timeZone: 'Asia/Kuala_Lumpur',
+      })
+    : 'TBA'
+
+  const emailSubject = `Registration Status Update for ${event.name}`
+
+  const html = rejectionEmailHtml({
+    name,
+    email,
+    phone,
+    eventName: event.name,
+    eventDate,
+    eventLocation: event.location,
+    eventLocationLink: event.locationLink ?? null,
+    eventAmount: typeof event.amount === 'number' ? event.amount : null,
+    reason: reason ?? null,
   })
 
   await sendEmailViaBrevo({

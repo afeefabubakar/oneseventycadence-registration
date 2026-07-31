@@ -101,13 +101,42 @@ export const Events: CollectionConfig = {
       },
     },
     {
+      name: 'paymentSectionSeparator',
+      type: 'ui',
+      admin: {
+        components: {
+          Field: '/components/SectionSeparator#PaymentSectionSeparator',
+        },
+      },
+    },
+    {
+      name: 'requiresPayment',
+      type: 'checkbox',
+      label: 'Require Payment / Commitment Fee',
+      defaultValue: false,
+      admin: {
+        description: 'Check this to enable DuitNow QR payment and receipt upload for this event',
+      },
+    },
+    {
       name: 'paymentQrImage',
       type: 'upload',
       relationTo: 'media',
       required: false,
       label: 'Payment QR Code Image',
       admin: {
+        condition: (data) => Boolean(data?.requiresPayment),
         description: 'Upload or select a payment / DuitNow QR code image from Media',
+      },
+    },
+    {
+      name: 'amount',
+      type: 'number',
+      label: 'Commitment Fee Amount (RM)',
+      min: 0,
+      admin: {
+        condition: (data) => Boolean(data?.requiresPayment),
+        description: 'Amount in RM (e.g., 10 for RM10).',
       },
     },
     {
@@ -115,6 +144,7 @@ export const Events: CollectionConfig = {
       type: 'textarea',
       label: 'Payment Instructions',
       admin: {
+        condition: (data) => Boolean(data?.requiresPayment),
         placeholder: 'e.g. Please scan the DuitNow QR code above and transfer the registration fee.',
       },
     },

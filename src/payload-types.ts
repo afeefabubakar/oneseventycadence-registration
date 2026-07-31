@@ -200,9 +200,17 @@ export interface Event {
   registrationOpenDate?: string | null;
   registrationCloseDate?: string | null;
   /**
+   * Check this to enable DuitNow QR payment and receipt upload for this event
+   */
+  requiresPayment?: boolean | null;
+  /**
    * Upload or select a payment / DuitNow QR code image from Media
    */
   paymentQrImage?: (number | null) | Media;
+  /**
+   * Amount in RM (e.g., 10 for RM10).
+   */
+  amount?: number | null;
   paymentInstructions?: string | null;
   updatedAt: string;
   createdAt: string;
@@ -218,10 +226,22 @@ export interface Registration {
   phone: string;
   event: number | Event;
   /**
+   * Payment / commitment fee amount for this registration in RM
+   */
+  amount?: number | null;
+  /**
    * Uploaded payment proof / receipt screenshot
    */
   receipt?: (number | null) | Receipt;
-  status: 'confirmed' | 'pending' | 'cancelled';
+  status: 'confirmed' | 'pending' | 'declined' | 'cancelled';
+  /**
+   * Select why this registration was declined
+   */
+  declineReason?: ('wrong_amount' | 'invalid_receipt' | 'others') | null;
+  /**
+   * Enter a custom message to include in the decline email sent to the registrant
+   */
+  customDeclineReason?: string | null;
   attended?: boolean | null;
   updatedAt: string;
   createdAt: string;
@@ -394,7 +414,9 @@ export interface EventsSelect<T extends boolean = true> {
   showEvent?: T;
   registrationOpenDate?: T;
   registrationCloseDate?: T;
+  requiresPayment?: T;
   paymentQrImage?: T;
+  amount?: T;
   paymentInstructions?: T;
   updatedAt?: T;
   createdAt?: T;
@@ -408,8 +430,11 @@ export interface RegistrationsSelect<T extends boolean = true> {
   email?: T;
   phone?: T;
   event?: T;
+  amount?: T;
   receipt?: T;
   status?: T;
+  declineReason?: T;
+  customDeclineReason?: T;
   attended?: T;
   updatedAt?: T;
   createdAt?: T;
