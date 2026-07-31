@@ -41,10 +41,24 @@ export async function POST(req: NextRequest) {
       limit: 1000,
     })
 
-    // Match email case-insensitively
-    const matchedReg = registrations.docs.find(
-      (reg) => reg.email && reg.email.trim().toLowerCase() === cleanEmail,
-    )
+    // Match email case-insensitively, prioritizing active confirmed/pending registrations
+    const matchedReg =
+      registrations.docs.find(
+        (reg) =>
+          reg.email &&
+          reg.email.trim().toLowerCase() === cleanEmail &&
+          reg.status === 'confirmed',
+      ) ||
+      registrations.docs.find(
+        (reg) =>
+          reg.email &&
+          reg.email.trim().toLowerCase() === cleanEmail &&
+          reg.status !== 'cancelled' &&
+          reg.status !== 'declined',
+      ) ||
+      registrations.docs.find(
+        (reg) => reg.email && reg.email.trim().toLowerCase() === cleanEmail,
+      )
 
     if (!matchedReg) {
       return NextResponse.json(
@@ -55,7 +69,7 @@ export async function POST(req: NextRequest) {
       )
     }
 
-    if (matchedReg.status === 'cancelled') {
+    if (matchedReg.status === 'cancelled' || matchedReg.status === 'declined') {
       return NextResponse.json(
         {
           error: `Your registration for ${event.name} has been cancelled. Please contact event staff for assistance.`,

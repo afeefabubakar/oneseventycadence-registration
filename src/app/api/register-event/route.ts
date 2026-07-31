@@ -168,11 +168,12 @@ export async function POST(req: NextRequest) {
       )
     }
 
-    // Check for duplicate registration (same email + same event)
+    // Check for duplicate active registration (same email + same event)
     const existing = await payload.find({
       collection: 'registrations',
       where: {
         event: { equals: eventId },
+        status: { in: ['confirmed', 'pending'] },
       },
       limit: 1000,
     })
