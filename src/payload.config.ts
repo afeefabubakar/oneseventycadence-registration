@@ -43,8 +43,12 @@ export default buildConfig({
   plugins: [
     s3Storage({
       collections: {
-        media: true,
-        receipts: true,
+        media: {
+          prefix: 'media',
+        },
+        receipts: {
+          prefix: 'receipts',
+        },
       },
       bucket: process.env.S3_BUCKET || '',
       config: {
