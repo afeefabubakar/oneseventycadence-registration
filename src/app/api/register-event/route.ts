@@ -4,6 +4,7 @@ import { getPayload } from 'payload'
 import configPromise from '@payload-config'
 import nodemailer from 'nodemailer'
 import { confirmationEmailHtml } from '@/lib/emails/confirmation'
+import { sendConfirmationEmailHelper } from '@/lib/emails/sendEmail'
 import { z } from 'zod'
 
 const registerSchema = z.object({
@@ -78,9 +79,32 @@ async function sendEmailViaBrevo({
 
 export async function POST(req: NextRequest) {
   try {
-    const body = await req.json()
+    const contentType = req.headers.get('content-type') || ''
+    let name = ''
+    let email = ''
+    let phone = ''
+    let eventId = ''
+    let receiptFile: File | null = null
 
-    const parsed = registerSchema.safeParse(body)
+    if (contentType.includes('multipart/form-data')) {
+      const formData = await req.formData()
+      name = formData.get('name')?.toString() || ''
+      email = formData.get('email')?.toString() || ''
+      phone = formData.get('phone')?.toString() || ''
+      eventId = formData.get('eventId')?.toString() || ''
+      const file = formData.get('receipt')
+      if (file && typeof file === 'object' && 'arrayBuffer' in file) {
+        receiptFile = file as File
+      }
+    } else {
+      const body = await req.json()
+      name = body.name || ''
+      email = body.email || ''
+      phone = body.phone || ''
+      eventId = body.eventId || ''
+    }
+
+    const parsed = registerSchema.safeParse({ name, email, phone, eventId })
     if (!parsed.success) {
       return NextResponse.json(
         { error: 'Validation failed', details: parsed.error.flatten().fieldErrors },
@@ -88,9 +112,7 @@ export async function POST(req: NextRequest) {
       )
     }
 
-    const { name, email, phone, eventId } = parsed.data
     const cleanEmail = email.trim().toLowerCase()
-
     const payload = await getPayload({ config: configPromise })
 
     // Fetch event
@@ -166,7 +188,48 @@ export async function POST(req: NextRequest) {
       )
     }
 
-    // Save registration with normalized email
+    // Check if event requires payment (has payment QR image)
+    const requiresPayment = !!event.paymentQrImage
+
+    if (requiresPayment && !receiptFile) {
+      return NextResponse.json(
+        { error: 'Please upload your payment receipt screenshot to complete registration.' },
+        { status: 400 },
+      )
+    }
+
+    let receiptDocId: number | string | null = null
+
+    // Upload receipt to Receipts collection if provided
+    if (receiptFile) {
+      try {
+        const arrayBuffer = await receiptFile.arrayBuffer()
+        const buffer = Buffer.from(arrayBuffer)
+        const receiptDoc = await payload.create({
+          collection: 'receipts',
+          data: {
+            notes: `Uploaded during registration for ${event.name} by ${name} (${cleanEmail})`,
+          },
+          file: {
+            data: buffer,
+            name: receiptFile.name,
+            mimetype: receiptFile.type,
+            size: receiptFile.size,
+          },
+        })
+        receiptDocId = receiptDoc.id
+      } catch (uploadError) {
+        console.error('[register] receipt upload error:', uploadError)
+        return NextResponse.json(
+          { error: 'Failed to process receipt upload. Please try uploading a valid image file.' },
+          { status: 500 },
+        )
+      }
+    }
+
+    const regStatus = requiresPayment ? 'pending' : 'confirmed'
+
+    // Save registration with receipt link & status
     await payload.create({
       collection: 'registrations',
       data: {
@@ -174,42 +237,31 @@ export async function POST(req: NextRequest) {
         email: cleanEmail,
         phone,
         event: parseInt(eventId, 10),
-        status: 'confirmed',
+        status: regStatus,
+        receipt: receiptDocId ? (typeof receiptDocId === 'string' ? parseInt(receiptDocId, 10) : receiptDocId) : undefined,
       },
     })
 
     revalidatePath('/')
 
-    // Send confirmation email
-    const eventDate = event.date
-      ? new Date(event.date).toLocaleDateString('en-MY', {
-          weekday: 'long',
-          year: 'numeric',
-          month: 'long',
-          day: 'numeric',
-          hour: '2-digit',
-          minute: '2-digit',
-          timeZone: 'Asia/Kuala_Lumpur',
-        })
-      : 'TBA'
-
-    await sendEmailViaBrevo({
-      to: cleanEmail,
-      subject: `You're registered for ${event.name}! 🎉`,
-      html: confirmationEmailHtml({
-        name,
-        email: cleanEmail,
-        phone,
-        eventName: event.name,
-        eventDate,
-        eventLocation: event.location,
-        eventLocationLink: event.locationLink ?? null,
-        eventDescription: event.description ?? null,
-        eventDirection: event.direction ?? null,
-      }),
+    await sendConfirmationEmailHelper({
+      name,
+      email: cleanEmail,
+      phone,
+      event,
+      isPendingVerification: requiresPayment,
     })
 
-    return NextResponse.json({ success: true, message: 'Registration confirmed!' }, { status: 201 })
+    return NextResponse.json(
+      {
+        success: true,
+        isPending: requiresPayment,
+        message: requiresPayment
+          ? 'Registration received! Our team will verify your payment receipt shortly.'
+          : 'Registration confirmed!',
+      },
+      { status: 201 },
+    )
   } catch (err) {
     console.error('[register] error:', err)
     return NextResponse.json({ error: 'Something went wrong. Please try again.' }, { status: 500 })

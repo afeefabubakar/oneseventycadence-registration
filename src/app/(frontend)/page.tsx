@@ -60,6 +60,10 @@ async function getAllEvents(): Promise<{
         registrationStatus = 'closed'
       }
 
+      const paymentQrObj = event.paymentQrImage as { url?: string } | null | undefined
+      const paymentQrImageUrl = typeof paymentQrObj === 'object' && paymentQrObj?.url ? paymentQrObj.url : null
+      const paymentInstructions = (event.paymentInstructions as string | undefined) ?? null
+
       return {
         id: String(event.id),
         name: event.name,
@@ -78,6 +82,8 @@ async function getAllEvents(): Promise<{
         showEvent: (event.showEvent as boolean | undefined) ?? true,
         isPast,
         registrationStatus,
+        paymentQrImageUrl,
+        paymentInstructions,
       }
     }),
   )

@@ -16,4 +16,6 @@ export interface EventItem {
   showEvent: boolean
   isPast: boolean
   registrationStatus: 'open' | 'not_started' | 'closed' | 'full'
+  paymentQrImageUrl?: string | null
+  paymentInstructions?: string | null
 }
