@@ -26,6 +26,7 @@ import { AttendedCell as AttendedCell_bab101bb381f5f8dde53e97e143c8ccb } from '.
 import { RegistrationsListHeader as RegistrationsListHeader_3cbac6e2c4ffed90348ca0df25957068 } from '../../../components/RegistrationsListHeader'
 import { BrandIcon as BrandIcon_cc41ec678bb1aa65fe51d386246dab4b } from '../../../components/BrandGraphics'
 import { BrandLogo as BrandLogo_cc41ec678bb1aa65fe51d386246dab4b } from '../../../components/BrandGraphics'
+import { S3ClientUploadHandler as S3ClientUploadHandler_f97aa6c64367fa259c5bc0567239ef24 } from '@payloadcms/storage-s3/client'
 import { CollectionCards as CollectionCards_f9c02e79a4aed9a3924487c0cd4cafb1 } from '@payloadcms/next/rsc'
 
 /** @type import('payload').ImportMap */
@@ -58,5 +59,6 @@ export const importMap = {
   "/components/RegistrationsListHeader#RegistrationsListHeader": RegistrationsListHeader_3cbac6e2c4ffed90348ca0df25957068,
   "/components/BrandGraphics#BrandIcon": BrandIcon_cc41ec678bb1aa65fe51d386246dab4b,
   "/components/BrandGraphics#BrandLogo": BrandLogo_cc41ec678bb1aa65fe51d386246dab4b,
+  "@payloadcms/storage-s3/client#S3ClientUploadHandler": S3ClientUploadHandler_f97aa6c64367fa259c5bc0567239ef24,
   "@payloadcms/next/rsc#CollectionCards": CollectionCards_f9c02e79a4aed9a3924487c0cd4cafb1
 }
