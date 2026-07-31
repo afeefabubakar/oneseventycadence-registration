@@ -157,7 +157,7 @@ export function rejectionEmailHtml({
               </table>
 
               <p style="margin:0;font-size:13px;color:#6b7280;line-height:1.5;">
-                If you have any questions or need support, reply to this email to get in touch with us.
+                If you have any questions or need support, please get in touch with us.
               </p>
 
             </td>
