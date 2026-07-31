@@ -157,7 +157,7 @@ export async function POST(req: NextRequest) {
       collection: 'registrations',
       where: {
         event: { equals: eventId },
-        status: { equals: 'confirmed' },
+        status: { in: ['confirmed', 'pending'] },
       },
     })
 

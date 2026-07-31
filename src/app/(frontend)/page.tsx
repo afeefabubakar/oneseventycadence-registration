@@ -31,7 +31,7 @@ async function getAllEvents(): Promise<{
         collection: 'registrations',
         where: {
           event: { equals: event.id },
-          status: { equals: 'confirmed' },
+          status: { in: ['confirmed', 'pending'] },
         },
       })
 
