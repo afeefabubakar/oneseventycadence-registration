@@ -1,5 +1,6 @@
 import type { CollectionConfig } from 'payload'
 import { revalidatePath } from 'next/cache'
+import { sendConfirmationEmailHelper } from '@/lib/emails/sendEmail'
 
 export const Registrations: CollectionConfig = {
   slug: 'registrations',
@@ -21,8 +22,38 @@ export const Registrations: CollectionConfig = {
   },
   hooks: {
     afterChange: [
-      () => {
+      async ({ doc, previousDoc, operation, req }) => {
         revalidatePath('/')
+
+        // Send confirmation email when status changes to 'confirmed' from 'pending'
+        const isStatusChangedToConfirmed =
+          operation === 'update' &&
+          doc.status === 'confirmed' &&
+          previousDoc?.status !== 'confirmed'
+
+        if (isStatusChangedToConfirmed && doc.email) {
+          try {
+            let eventObj = doc.event
+            if (typeof eventObj === 'number' || typeof eventObj === 'string') {
+              eventObj = await req.payload.findByID({
+                collection: 'events',
+                id: String(eventObj),
+              })
+            }
+
+            if (eventObj) {
+              await sendConfirmationEmailHelper({
+                name: doc.name,
+                email: doc.email,
+                phone: doc.phone,
+                event: eventObj,
+                isPendingVerification: false,
+              })
+            }
+          } catch (emailErr) {
+            console.error('[Registrations hook] Error sending confirmation email on status update:', emailErr)
+          }
+        }
       },
     ],
     afterDelete: [
