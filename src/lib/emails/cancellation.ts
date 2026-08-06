@@ -82,9 +82,10 @@ export function cancellationEmailHtml({
 
   const ctaTitle = isPostponed ? 'Refund Options' : 'Full Refund Information'
   const ctaDescription = isPostponed
-    ? 'If you cannot make it to the postponed event date, please click below to upload your DuitNow QR code screenshot for a full refund.'
-    : 'Please click the button below to upload your DuitNow QR code screenshot so our team can process your instant refund.'
-  const buttonText = isPostponed ? 'Upload DuitNow QR →' : 'Upload DuitNow QR →'
+    ? 'If you cannot make it to the postponed event date, please click below to submit your bank account or DuitNow QR details for a full refund.'
+    : 'Please click the button below to submit your bank account or DuitNow QR details so our team can process your refund.'
+  const buttonText = isPostponed ? 'Request Refund →' : 'Submit Refund Details →'
+
 
   // Format body HTML using simple markdown parser
   let bodyHtml = ''

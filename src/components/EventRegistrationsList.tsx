@@ -528,39 +528,81 @@ export function EventRegistrationsList() {
                       {isCancelled && (
                         <td style={{ padding: '12px' }}>
                           <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
-                            {reg.refundAccountName && (
-                              <span style={{ fontSize: '12px', fontWeight: 600, color: 'var(--theme-elevation-800, #1e293b)' }}>
-                                {reg.refundAccountName}
-                              </span>
-                            )}
-                            {reg.refundQrImage ? (
-                              <button
-                                type="button"
-                                onClick={() => setViewingQrUrl(typeof reg.refundQrImage === 'object' ? reg.refundQrImage.url : reg.refundQrImage)}
+                            {/* Bank Transfer Submission */}
+                            {!reg.refundQrImage && reg.refundBank && (
+                              <div
                                 style={{
                                   fontSize: '11px',
-                                  fontWeight: 600,
-                                  color: '#E93998',
-                                  border: '1px solid #E93998',
+                                  color: 'var(--theme-elevation-700, #334155)',
+                                  backgroundColor: 'var(--theme-elevation-100, #f8fafc)',
+                                  padding: '4px 8px',
                                   borderRadius: '4px',
-                                  background: 'rgba(233, 57, 152, 0.08)',
-                                  cursor: 'pointer',
-                                  padding: '3px 8px',
-                                  width: 'fit-content',
-                                  display: 'inline-flex',
+                                  border: '1px solid var(--theme-elevation-200, #e2e8f0)',
+                                  display: 'flex',
+                                  justifyContent: 'space-between',
                                   alignItems: 'center',
-                                  gap: '4px',
+                                  gap: '6px',
                                 }}
                               >
-                                <QrCode size={12} />
-                                View DuitNow QR
-                              </button>
-                            ) : (
+                                <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', maxWidth: '160px' }}>
+                                  <strong>{reg.refundBank}</strong>: {reg.refundAccountName} ({reg.refundAccountNumber})
+                                </span>
+                                <button
+                                  type="button"
+                                  title="Copy Bank Details"
+                                  onClick={() => copyToClipboard(bankInfoString, reg.id)}
+                                  style={{
+                                    background: 'none',
+                                    border: 'none',
+                                    cursor: 'pointer',
+                                    color: copiedId === reg.id ? '#16a34a' : '#64748b',
+                                    padding: 0,
+                                  }}
+                                >
+                                  {copiedId === reg.id ? <CheckCheck size={13} /> : <Copy size={13} />}
+                                </button>
+                              </div>
+                            )}
+
+                            {/* DuitNow QR Upload Submission */}
+                            {reg.refundQrImage && (
+                              <div style={{ display: 'flex', flexDirection: 'column', gap: '2px' }}>
+                                {reg.refundAccountName && (
+                                  <span style={{ fontSize: '11px', fontWeight: 600, color: 'var(--theme-elevation-800, #1e293b)' }}>
+                                    {reg.refundAccountName}
+                                  </span>
+                                )}
+                                <button
+                                  type="button"
+                                  onClick={() => setViewingQrUrl(typeof reg.refundQrImage === 'object' ? reg.refundQrImage.url : reg.refundQrImage)}
+                                  style={{
+                                    fontSize: '11px',
+                                    fontWeight: 600,
+                                    color: '#E93998',
+                                    border: '1px solid #E93998',
+                                    borderRadius: '4px',
+                                    background: 'rgba(233, 57, 152, 0.08)',
+                                    cursor: 'pointer',
+                                    padding: '3px 8px',
+                                    width: 'fit-content',
+                                    display: 'inline-flex',
+                                    alignItems: 'center',
+                                    gap: '4px',
+                                  }}
+                                >
+                                  <QrCode size={12} />
+                                  View DuitNow QR
+                                </button>
+                              </div>
+                            )}
+
+                            {!reg.refundBank && !reg.refundQrImage && (
                               <span style={{ fontSize: '12px', color: 'var(--theme-elevation-400, #94a3b8)' }}>-</span>
                             )}
                           </div>
                         </td>
                       )}
+
 
 
                       {isCancelled && (

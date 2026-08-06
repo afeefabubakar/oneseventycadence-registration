@@ -78,7 +78,7 @@ export async function GET(request: Request) {
 export async function POST(request: Request) {
   try {
     const body = await request.json()
-    const { token, accountName, qrImageId } = body
+    const { token, bankName, accountName, accountNumber, duitnowType, qrImageId } = body
 
     if (!token) {
       return NextResponse.json({ error: 'Token is required' }, { status: 400 })
@@ -91,11 +91,20 @@ export async function POST(request: Request) {
       )
     }
 
-    if (!qrImageId) {
-      return NextResponse.json(
-        { error: 'DuitNow QR Code screenshot upload is required.' },
-        { status: 400 },
-      )
+    if (duitnowType === 'account') {
+      if (!bankName || !accountNumber) {
+        return NextResponse.json(
+          { error: 'Bank Name and Account Number are required for bank transfer.' },
+          { status: 400 },
+        )
+      }
+    } else {
+      if (!qrImageId) {
+        return NextResponse.json(
+          { error: 'DuitNow QR Code screenshot upload is required.' },
+          { status: 400 },
+        )
+      }
     }
 
     const payload = await getPayload({ config: configPromise })
@@ -120,14 +129,15 @@ export async function POST(request: Request) {
       id: reg.id,
       data: {
         refundStatus: 'requested',
-        refundBank: 'DuitNow QR',
+        refundBank: duitnowType === 'account' ? bankName : 'DuitNow QR',
         refundAccountName: accountName,
-        refundAccountNumber: 'QR Code Uploaded',
-        refundDuitnowType: 'qr',
-        refundQrImage: qrImageId,
+        refundAccountNumber: duitnowType === 'account' ? accountNumber : 'QR Code Uploaded',
+        refundDuitnowType: duitnowType || 'account',
+        refundQrImage: duitnowType === 'qr' ? qrImageId : undefined,
         refundRequestedAt: new Date().toISOString(),
       },
     })
+
 
 
 
