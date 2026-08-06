@@ -83,7 +83,7 @@ export default function PrivacyPage() {
                 <li>Phone Number</li>
                 <li>Selected Event Details &amp; Attendance Status</li>
                 <li>
-                  DuitNow QR Screenshots &amp; Account Holder Name (collected solely for event refund requests when events are postponed or cancelled)
+                  Bank Account Details (Bank Name, Account Holder Name, and Account Number) or DuitNow QR Screenshots (collected solely for processing event refunds when events are postponed or cancelled)
                 </li>
               </ul>
             </div>
@@ -98,7 +98,7 @@ export default function PrivacyPage() {
                 <li>
                   Sending event confirmation notices, updates, venue reminders, or cancellation/postponement notices.
                 </li>
-                <li>Processing 100% full refunds via DuitNow QR in the event of cancellation or postponement.</li>
+                <li>Processing 100% full refunds via Bank Transfer or DuitNow QR in the event of cancellation or postponement.</li>
                 <li>On-site check-in and attendance verification.</li>
                 <li>Contacting you in case of emergency or safety updates related to the event.</li>
               </ul>
@@ -127,8 +127,8 @@ export default function PrivacyPage() {
               <h3 className="font-semibold text-gray-900">4. Security &amp; Data Retention</h3>
               <p>
                 We implement appropriate administrative and technical measures to protect your
-                personal data against unauthorized access, loss, or misuse. In accordance with PDPA Data Minimization rules,
-                <strong> DuitNow QR code screenshots uploaded for refund requests are stored in an isolated secure collection and are automatically and permanently deleted from our servers immediately upon completion of your refund transfer.</strong>
+                personal data against unauthorized access, loss, or misuse. Bank account details and DuitNow QR code screenshots submitted for refund requests are encrypted and processed strictly for transfer fulfillment.
+                <strong> In accordance with PDPA Data Minimization rules, DuitNow QR code screenshots are stored in an isolated secure collection and automatically deleted from our servers immediately upon completion of your refund transfer.</strong>
               </p>
             </div>
 
@@ -175,7 +175,7 @@ export default function PrivacyPage() {
                 <li>Alamat Emel</li>
                 <li>Nombor Telefon</li>
                 <li>Butiran Acara Yang Dipilih &amp; Status Kehadiran</li>
-                <li>Tangkapan Skrin Imej QR DuitNow &amp; Nama Pemegang Akaun (dikumpul khusus bagi tujuan permohonan pemulangan wang sekiranya acara ditunda atau dibatalkan)</li>
+                <li>Butiran Akaun Bank (Nama Bank, Nama Pemegang Akaun, dan Nombor Akaun) atau Tangkapan Skrin DuitNow QR (dikumpul khusus bagi tujuan pemulangan wang sekiranya acara ditunda atau dibatalkan)</li>
               </ul>
             </div>
 
@@ -189,7 +189,7 @@ export default function PrivacyPage() {
                 <li>
                   Menghantar pengesahan pendaftaran, maklumat terkini acara, serta notis penundaan atau pembatalan acara.
                 </li>
-                <li>Memproses pemulangan wang 100% secara imbasan DuitNow QR sekiranya acara ditunda atau dibatalkan.</li>
+                <li>Memproses pemulangan wang 100% secara Pindahan Bank atau DuitNow QR sekiranya acara ditunda atau dibatalkan.</li>
                 <li>Pengesahan kehadiran semasa pendaftaran di lokasi acara (check-in).</li>
                 <li>Menghubungi anda jika berlaku kecemasan atau bagi tujuan keselamatan acara.</li>
               </ul>
@@ -218,8 +218,8 @@ export default function PrivacyPage() {
               <h3 className="font-semibold text-gray-900">4. Keselamatan &amp; Simpanan Data</h3>
               <p>
                 Kami mengambil langkah pentadbiran dan teknikal yang sewajarnya untuk melindungi
-                data peribadi anda daripada akses tanpa kebenaran, kehilangan, atau penyalahgunaan.
-                Selaras dengan prinsip Pengurangan Data PDPA, <strong>tangkapan skrin kod QR DuitNow yang dimuat naik untuk permohonan pemulangan wang disimpan secara terpencil dan akan dipadamkan secara automatik serta kekal daripada pelayan kami serta-merta selepas proses pemulangan wang selesai.</strong>
+                data peribadi anda daripada akses tanpa kebenaran, kehilangan, atau penyalahgunaan. Butiran akaun bank dan tangkapan skrin kod QR DuitNow yang dimuat naik dienkripsi dan diproses khusus untuk penyempurnaan pemulangan wang.
+                <strong> Selaras dengan prinsip Pengurangan Data PDPA, tangkapan skrin kod QR DuitNow disimpan secara terpencil dan dipadamkan secara automatik daripada pelayan kami serta-merta selepas pemulangan wang selesai.</strong>
               </p>
             </div>
 
