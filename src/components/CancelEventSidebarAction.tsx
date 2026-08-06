@@ -64,13 +64,21 @@ export function CancelEventSidebarAction() {
   const [loading, setLoading] = useState(false)
   const [showModal, setShowModal] = useState(false)
   const [noticeType, setNoticeType] = useState<'cancelled' | 'postponed'>('cancelled')
+
   const [customMessage, setCustomMessage] = useState(DEFAULT_CANCELLED_TEMPLATE)
   const [activeTab, setActiveTab] = useState<'edit' | 'preview'>('edit')
+  const [savedPostponedMsg, setSavedPostponedMsg] = useState<string | null>(null)
+  const [savedCancelledMsg, setSavedCancelledMsg] = useState<string | null>(null)
 
   const handleNoticeTypeChange = (type: 'cancelled' | 'postponed') => {
     setNoticeType(type)
-    setCustomMessage(type === 'postponed' ? DEFAULT_POSTPONED_TEMPLATE : DEFAULT_CANCELLED_TEMPLATE)
+    if (type === 'postponed') {
+      setCustomMessage(savedPostponedMsg || DEFAULT_POSTPONED_TEMPLATE)
+    } else {
+      setCustomMessage(savedCancelledMsg || DEFAULT_CANCELLED_TEMPLATE)
+    }
   }
+
 
   useEffect(() => {
     setMounted(true)
@@ -87,6 +95,13 @@ export function CancelEventSidebarAction() {
           const data = await res.json()
           if (active && data) {
             setIsCancelled(Boolean(data.isCancelled))
+            if (data.noticeMessagePostponed) {
+              setSavedPostponedMsg(data.noticeMessagePostponed)
+            }
+            if (data.noticeMessageCancelled) {
+              setSavedCancelledMsg(data.noticeMessageCancelled)
+              setCustomMessage(data.noticeMessageCancelled)
+            }
           }
         }
       } catch (err) {
@@ -99,6 +114,7 @@ export function CancelEventSidebarAction() {
       active = false
     }
   }, [id])
+
 
   if (!mounted || !id) return null
 
@@ -552,8 +568,9 @@ export function CancelEventSidebarAction() {
                   style={{
                     background:
                       noticeType === 'postponed'
-                        ? 'linear-gradient(135deg,#d97706 0%,#f59e0b 100%)'
+                        ? 'linear-gradient(135deg,#eab308 0%,#f59e0b 100%)'
                         : 'linear-gradient(135deg,#dc2626 0%,#f43f5e 100%)',
+
                     padding: '24px',
                     textAlign: 'center',
                     color: '#ffffff',

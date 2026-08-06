@@ -3,6 +3,8 @@ import { confirmationEmailHtml } from './confirmation'
 import { rejectionEmailHtml } from './rejection'
 import { cancellationEmailHtml } from './cancellation'
 import { refundConfirmationEmailHtml } from './refundConfirmation'
+import { refundRequestReceivedEmailHtml } from './refundRequestReceived'
+
 
 export async function sendEmailViaBrevo({
   to,
@@ -244,4 +246,41 @@ export async function sendRefundConfirmationEmailHelper({
     html,
   })
 }
+
+export async function sendRefundRequestReceivedEmailHelper({
+  name,
+  email,
+  event,
+  amount,
+  bankName,
+  accountNumber,
+  duitnowType,
+}: {
+  name: string
+  email: string
+  event: any
+  amount?: number | null
+  bankName?: string | null
+  accountNumber?: string | null
+  duitnowType?: string | null
+}) {
+  const emailSubject = `Refund Request Received: ${event.name}`
+
+  const html = refundRequestReceivedEmailHtml({
+    name,
+    email,
+    eventName: event.name,
+    amount: amount ?? event.amount ?? null,
+    bankName: bankName ?? null,
+    accountNumber: accountNumber ?? null,
+    duitnowType: duitnowType ?? null,
+  })
+
+  await sendEmailViaBrevo({
+    to: email,
+    subject: emailSubject,
+    html,
+  })
+}
+
 

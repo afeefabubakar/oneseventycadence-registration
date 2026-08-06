@@ -161,6 +161,22 @@ export const Events: CollectionConfig = {
       },
     },
 
+    {
+      name: 'noticeMessagePostponed',
+      type: 'textarea',
+      admin: {
+        hidden: true,
+      },
+    },
+    {
+      name: 'noticeMessageCancelled',
+      type: 'textarea',
+      admin: {
+        hidden: true,
+      },
+    },
+
+
 
     {
       name: 'cancelEventSidebarAction',

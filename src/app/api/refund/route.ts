@@ -1,8 +1,10 @@
 import { NextResponse } from 'next/server'
 import { getPayload } from 'payload'
 import configPromise from '@payload-config'
+import { sendRefundRequestReceivedEmailHelper } from '@/lib/emails/sendEmail'
 
 export async function GET(request: Request) {
+
   try {
     const { searchParams } = new URL(request.url)
     const token = searchParams.get('token')
@@ -134,18 +136,41 @@ export async function POST(request: Request) {
         refundAccountNumber: duitnowType === 'account' ? accountNumber : 'QR Code Uploaded',
         refundDuitnowType: duitnowType || 'account',
         refundQrImage: duitnowType === 'qr' ? qrImageId : undefined,
-        refundRequestedAt: new Date().toISOString(),
       },
     })
 
-
-
+    // Send confirmation email to attendee acknowledging receipt of refund request details
+    if (reg.email) {
+      try {
+        let eventObj = reg.event
+        if (typeof eventObj === 'number' || typeof eventObj === 'string') {
+          eventObj = await payload.findByID({
+            collection: 'events',
+            id: String(eventObj),
+          })
+        }
+        if (eventObj) {
+          await sendRefundRequestReceivedEmailHelper({
+            name: accountName || reg.name,
+            email: reg.email,
+            event: eventObj,
+            amount: reg.amount || eventObj.amount || 0,
+            bankName: duitnowType === 'account' ? bankName : 'DuitNow QR',
+            accountNumber: duitnowType === 'account' ? accountNumber : 'QR Code Uploaded',
+            duitnowType: duitnowType || 'account',
+          })
+        }
+      } catch (emailErr) {
+        console.error('[API /api/refund POST] Error sending refund request received email:', emailErr)
+      }
+    }
 
     return NextResponse.json({
       success: true,
       message: 'Refund request submitted successfully',
       refundStatus: updated.refundStatus,
     })
+
   } catch (err: any) {
     console.error('[API /api/refund POST] Error:', err)
     return NextResponse.json({ error: 'Failed to submit refund request' }, { status: 500 })

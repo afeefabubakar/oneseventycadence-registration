@@ -218,6 +218,8 @@ export interface Event {
    * Managed automatically via the Cancel Event button below.
    */
   isCancelled?: boolean | null;
+  noticeMessagePostponed?: string | null;
+  noticeMessageCancelled?: string | null;
   updatedAt: string;
   createdAt: string;
 }
@@ -472,6 +474,8 @@ export interface EventsSelect<T extends boolean = true> {
   amount?: T;
   paymentInstructions?: T;
   isCancelled?: T;
+  noticeMessagePostponed?: T;
+  noticeMessageCancelled?: T;
   updatedAt?: T;
   createdAt?: T;
 }

@@ -28,15 +28,25 @@ export async function POST(request: Request) {
     const noticeType = body.noticeType || 'cancelled'
     const customMessage = body.customMessage || null
 
-    // Update event to isCancelled: true and allowRegistration (isActive): false
+    // Update event to isCancelled: true, isActive: false, and save per-event notice template
+    const updateData: any = {
+      isCancelled: true,
+      isActive: false,
+    }
+    if (customMessage) {
+      if (noticeType === 'postponed') {
+        updateData.noticeMessagePostponed = customMessage
+      } else {
+        updateData.noticeMessageCancelled = customMessage
+      }
+    }
+
     await payload.update({
       collection: 'events',
       id: String(eventId),
-      data: {
-        isCancelled: true,
-        isActive: false,
-      },
+      data: updateData,
     })
+
 
 
 

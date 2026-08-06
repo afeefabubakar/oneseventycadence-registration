@@ -7,10 +7,12 @@ export const RefundQrs: CollectionConfig = {
     plural: 'Refund DuitNow QRs',
   },
   admin: {
+    hidden: true,
     useAsTitle: 'filename',
     defaultColumns: ['filename', 'createdAt', 'updatedAt'],
     description: 'Uploaded DuitNow QR images for attendee refund processing',
   },
+
   access: {
     read: ({ req }) => !!req.user,
     create: () => true, // Allow frontend refund form to upload QR image

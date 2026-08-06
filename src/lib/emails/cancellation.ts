@@ -93,8 +93,9 @@ export function cancellationEmailHtml({
     ? `Important update regarding ${eventName}`
     : `Cancellation notice for ${eventName}`
   const headerGradient = isPostponed
-    ? 'linear-gradient(135deg,#d97706 0%,#f59e0b 100%)'
+    ? 'linear-gradient(135deg,#eab308 0%,#f59e0b 100%)'
     : 'linear-gradient(135deg,#dc2626 0%,#f43f5e 100%)'
+
 
   const ctaTitle = isPostponed ? 'Refund Options' : 'Full Refund Information'
   const ctaDescription = isPostponed
