@@ -1,6 +1,8 @@
 import nodemailer from 'nodemailer'
 import { confirmationEmailHtml } from './confirmation'
 import { rejectionEmailHtml } from './rejection'
+import { cancellationEmailHtml } from './cancellation'
+import { refundConfirmationEmailHtml } from './refundConfirmation'
 
 export async function sendEmailViaBrevo({
   to,
@@ -156,3 +158,90 @@ export async function sendRejectionEmailHelper({
     html,
   })
 }
+
+export async function sendCancellationEmailHelper({
+  name,
+  email,
+  event,
+  amount,
+  refundToken,
+  noticeType = 'cancelled',
+  customMessage,
+}: {
+  name: string
+  email: string
+  event: any
+  amount?: number | null
+  refundToken: string
+  noticeType?: 'cancelled' | 'postponed'
+  customMessage?: string | null
+}) {
+  const eventDate = event.date
+    ? new Date(event.date).toLocaleDateString('en-MY', {
+        weekday: 'long',
+        year: 'numeric',
+        month: 'long',
+        day: 'numeric',
+        hour: '2-digit',
+        minute: '2-digit',
+        timeZone: 'Asia/Kuala_Lumpur',
+      })
+    : 'TBA'
+
+  const emailSubject = noticeType === 'postponed'
+    ? `[Important] Event Postponement Notice: ${event.name}`
+    : `[Important] Event Cancellation Notice: ${event.name}`
+
+  const html = cancellationEmailHtml({
+    name,
+    email,
+    eventName: event.name,
+    eventDate,
+    eventLocation: event.location,
+    amount: amount ?? event.amount ?? null,
+    refundToken,
+    noticeType,
+    customMessage: customMessage ?? null,
+  })
+
+  await sendEmailViaBrevo({
+    to: email,
+    subject: emailSubject,
+    html,
+  })
+}
+
+
+export async function sendRefundConfirmationEmailHelper({
+  name,
+  email,
+  event,
+  amount,
+  bankName,
+  accountNumber,
+}: {
+  name: string
+  email: string
+  event: any
+  amount: number
+  bankName?: string | null
+  accountNumber?: string | null
+}) {
+  const emailSubject = `Refund Confirmation for ${event.name}`
+
+  const html = refundConfirmationEmailHtml({
+    name,
+    email,
+    eventName: event.name,
+    amount,
+    bankName: bankName ?? null,
+    accountNumber: accountNumber ?? null,
+  })
+
+  await sendEmailViaBrevo({
+    to: email,
+    subject: emailSubject,
+    html,
+  })
+}
+
