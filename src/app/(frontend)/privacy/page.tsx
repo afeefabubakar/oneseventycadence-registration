@@ -1,12 +1,12 @@
 import React from 'react'
 import Link from 'next/link'
 import Image from 'next/image'
-import { ArrowLeft, ShieldCheck } from 'lucide-react'
+import { ArrowLeft } from 'lucide-react'
 
 export const metadata = {
   title: 'PDPA Privacy Notice | oneseventycadence',
   description:
-    'Personal Data Protection Act (PDPA) Privacy Notice for oneseventycadence event registrations.',
+    'Personal Data Protection Act (PDPA) Privacy Notice for oneseventycadence event registrations and refund processing.',
 }
 
 export default function PrivacyPage() {
@@ -68,13 +68,13 @@ export default function PrivacyPage() {
               <strong>Personal Data Protection Act 2010 of Malaysia (&quot;PDPA&quot;)</strong>,
               this Privacy Notice explains how <strong>oneseventycadence</strong> (&quot;we&quot;,
               &quot;us&quot;, or &quot;our&quot;) collects, uses, processes, discloses, and protects
-              your personal data when you register for our running events.
+              your personal data when you register for our running events or submit refund requests.
             </p>
 
             <div className="space-y-3 pt-2">
               <h3 className="font-semibold text-gray-900">1. Personal Data Collected</h3>
               <p>
-                When you register for an event, we collect personal information directly from you,
+                We collect personal information directly from you when registering or requesting refunds,
                 including:
               </p>
               <ul className="list-disc pl-5 space-y-1 text-gray-600">
@@ -82,6 +82,9 @@ export default function PrivacyPage() {
                 <li>Email Address</li>
                 <li>Phone Number</li>
                 <li>Selected Event Details &amp; Attendance Status</li>
+                <li>
+                  DuitNow QR Screenshots &amp; Account Holder Name (collected solely for event refund requests when events are postponed or cancelled)
+                </li>
               </ul>
             </div>
 
@@ -93,8 +96,9 @@ export default function PrivacyPage() {
               <ul className="list-disc pl-5 space-y-1 text-gray-600">
                 <li>Processing and managing your event registration and entry slots.</li>
                 <li>
-                  Sending event confirmation notices, updates, venue reminders, or schedule changes.
+                  Sending event confirmation notices, updates, venue reminders, or cancellation/postponement notices.
                 </li>
+                <li>Processing 100% full refunds via DuitNow QR in the event of cancellation or postponement.</li>
                 <li>On-site check-in and attendance verification.</li>
                 <li>Contacting you in case of emergency or safety updates related to the event.</li>
               </ul>
@@ -123,9 +127,8 @@ export default function PrivacyPage() {
               <h3 className="font-semibold text-gray-900">4. Security &amp; Data Retention</h3>
               <p>
                 We implement appropriate administrative and technical measures to protect your
-                personal data against unauthorized access, loss, or misuse. Your data is retained
-                only for as long as necessary to fulfill the event management purposes or to comply
-                with statutory retention requirements.
+                personal data against unauthorized access, loss, or misuse. In accordance with PDPA Data Minimization rules,
+                <strong> DuitNow QR code screenshots uploaded for refund requests are stored in an isolated secure collection and are automatically and permanently deleted from our servers immediately upon completion of your refund transfer.</strong>
               </p>
             </div>
 
@@ -158,13 +161,13 @@ export default function PrivacyPage() {
               <strong>Akta Perlindungan Data Peribadi 2010 Malaysia (&quot;PDPA&quot;)</strong>,
               Notis Privasi ini menjelaskan bagaimana <strong>oneseventycadence</strong>{' '}
               (&quot;kami&quot;) mengumpul, mengguna, memproses, mendedahkan, dan melindungi data
-              peribadi anda semasa anda mendaftar untuk acara larian kami.
+              peribadi anda semasa anda mendaftar untuk acara larian kami atau membuat permohonan pemulangan wang.
             </p>
 
             <div className="space-y-3 pt-2">
               <h3 className="font-semibold text-gray-900">1. Data Peribadi Yang Dikumpul</h3>
               <p>
-                Semasa anda mendaftar untuk sesuatu acara, kami mengumpul maklumat peribadi daripada
+                Semasa anda mendaftar atau memohon pemulangan wang, kami mengumpul maklumat peribadi daripada
                 anda secara langsung, termasuk:
               </p>
               <ul className="list-disc pl-5 space-y-1 text-gray-600">
@@ -172,6 +175,7 @@ export default function PrivacyPage() {
                 <li>Alamat Emel</li>
                 <li>Nombor Telefon</li>
                 <li>Butiran Acara Yang Dipilih &amp; Status Kehadiran</li>
+                <li>Tangkapan Skrin Imej QR DuitNow &amp; Nama Pemegang Akaun (dikumpul khusus bagi tujuan permohonan pemulangan wang sekiranya acara ditunda atau dibatalkan)</li>
               </ul>
             </div>
 
@@ -183,8 +187,9 @@ export default function PrivacyPage() {
               <ul className="list-disc pl-5 space-y-1 text-gray-600">
                 <li>Memproses dan menguruskan pendaftaran serta slot penyertaan acara anda.</li>
                 <li>
-                  Menghantar pengesahan pendaftaran, maklumat terkini acara, dan peringatan lokasi.
+                  Menghantar pengesahan pendaftaran, maklumat terkini acara, serta notis penundaan atau pembatalan acara.
                 </li>
+                <li>Memproses pemulangan wang 100% secara imbasan DuitNow QR sekiranya acara ditunda atau dibatalkan.</li>
                 <li>Pengesahan kehadiran semasa pendaftaran di lokasi acara (check-in).</li>
                 <li>Menghubungi anda jika berlaku kecemasan atau bagi tujuan keselamatan acara.</li>
               </ul>
@@ -214,8 +219,7 @@ export default function PrivacyPage() {
               <p>
                 Kami mengambil langkah pentadbiran dan teknikal yang sewajarnya untuk melindungi
                 data peribadi anda daripada akses tanpa kebenaran, kehilangan, atau penyalahgunaan.
-                Data anda hanya disimpan selama mana yang diperlukan untuk memenuhi tujuan
-                pengurusan acara.
+                Selaras dengan prinsip Pengurangan Data PDPA, <strong>tangkapan skrin kod QR DuitNow yang dimuat naik untuk permohonan pemulangan wang disimpan secara terpencil dan akan dipadamkan secara automatik serta kekal daripada pelayan kami serta-merta selepas proses pemulangan wang selesai.</strong>
               </p>
             </div>
 

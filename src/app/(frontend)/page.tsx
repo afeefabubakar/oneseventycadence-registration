@@ -17,6 +17,8 @@ async function getAllEvents(): Promise<{
 }> {
   const payload = await getPayload({ config: configPromise })
 
+
+
   const eventsResult = await payload.find({
     collection: 'events',
     sort: 'date',
