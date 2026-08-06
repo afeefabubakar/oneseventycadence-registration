@@ -37,7 +37,8 @@ export function refundRequestReceivedEmailHtml({
 
           <!-- Header -->
           <tr>
-            <td style="background:linear-gradient(135deg,#eab308 0%,#f59e0b 100%);padding:40px;text-align:center;">
+            <td style="background:linear-gradient(135deg,#E93998 0%,#ff73b9 100%);padding:40px;text-align:center;">
+
               <p style="margin:0 0 8px 0;font-size:13px;font-weight:600;letter-spacing:3px;text-transform:uppercase;color:rgba(255,255,255,0.95);">oneseventycadence</p>
               <h1 style="margin:0 0 8px 0;font-size:26px;font-weight:800;color:#ffffff;letter-spacing:-0.5px;">Refund Request Received</h1>
               <p style="margin:0;font-size:15px;color:rgba(255,255,255,0.95);">${eventName}</p>

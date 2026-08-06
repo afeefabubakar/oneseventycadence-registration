@@ -566,10 +566,8 @@ export function CancelEventSidebarAction() {
                 {/* Email Header */}
                 <div
                   style={{
-                    background:
-                      noticeType === 'postponed'
-                        ? 'linear-gradient(135deg,#eab308 0%,#f59e0b 100%)'
-                        : 'linear-gradient(135deg,#dc2626 0%,#f43f5e 100%)',
+                    background: 'linear-gradient(135deg, #E93998 0%, #ff73b9 100%)',
+
 
                     padding: '24px',
                     textAlign: 'center',
