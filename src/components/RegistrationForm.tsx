@@ -363,7 +363,11 @@ export function RegistrationForm({ events }: RegistrationFormProps) {
                         ? event.registrationStatus !== 'open'
                         : event.isFull
 
-                      const hasPayment = event.requiresPayment ?? !!event.paymentQrImageUrl
+                      const hasPayment =
+                        (event.requiresPayment ?? !!event.paymentQrImageUrl) &&
+                        event.registrationStatus !== 'postponed' &&
+                        event.registrationStatus !== 'cancelled'
+
 
                       return (
                         <SelectItem
@@ -393,11 +397,22 @@ export function RegistrationForm({ events }: RegistrationFormProps) {
                                     · Slots Full
                                   </span>
                                 )}
+                                {event.registrationStatus === 'postponed' && (
+                                  <span className="ml-2 text-xs font-semibold text-muted-foreground">
+                                    · Postponed
+                                  </span>
+                                )}
+                                {event.registrationStatus === 'cancelled' && (
+                                  <span className="ml-2 text-xs font-semibold text-muted-foreground">
+                                    · Cancelled
+                                  </span>
+                                )}
                                 {event.registrationStatus === 'closed' && (
                                   <span className="ml-2 text-xs font-semibold text-muted-foreground">
                                     · Reg Closed
                                   </span>
                                 )}
+
                               </span>
 
                               {hasPayment && (

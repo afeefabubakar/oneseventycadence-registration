@@ -50,9 +50,15 @@ async function getAllEvents(): Promise<{
 
       const isNotStarted = openDate ? now < openDate : false
       const isRegistrationClosed = closeDate ? now > closeDate : false
+      const isPostponed = Boolean(event.isPostponed)
+      const isCancelled = Boolean(event.isCancelled)
 
-      let registrationStatus: 'open' | 'not_started' | 'closed' | 'full' = 'open'
-      if (!event.isActive) {
+      let registrationStatus: 'open' | 'not_started' | 'closed' | 'full' | 'postponed' | 'cancelled' = 'open'
+      if (isPostponed) {
+        registrationStatus = 'postponed'
+      } else if (isCancelled) {
+        registrationStatus = 'cancelled'
+      } else if (!event.isActive) {
         registrationStatus = 'closed'
       } else if (isFull) {
         registrationStatus = 'full'
@@ -86,6 +92,8 @@ async function getAllEvents(): Promise<{
         isFull,
         slotsLeft,
         isActive: event.isActive ?? true,
+        isCancelled,
+        isPostponed,
         showEvent: (event.showEvent as boolean | undefined) ?? true,
         isPast,
         registrationStatus,
@@ -94,6 +102,7 @@ async function getAllEvents(): Promise<{
         requiresPayment,
         amount: (event.amount as number | undefined) ?? null,
       }
+
     }),
   )
 

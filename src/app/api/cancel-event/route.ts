@@ -4,6 +4,7 @@ import configPromise from '@payload-config'
 import { sendCancellationEmailHelper } from '@/lib/emails/sendEmail'
 
 export async function POST(request: Request) {
+
   try {
     const payload = await getPayload({ config: configPromise })
 

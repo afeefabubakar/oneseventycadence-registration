@@ -38,11 +38,15 @@ export function UpcomingRuns({ events }: UpcomingRunsProps) {
               <p className="font-semibold text-gray-900 leading-snug">{event.name}</p>
 
               <div className="flex items-center gap-1.5 shrink-0">
-                {event.amount != null && event.amount > 0 && (
-                  <span className="rounded-full bg-pink-50 dark:bg-pink-950/60 px-2.5 py-0.5 text-xs font-bold text-[#E93998] border border-pink-200 dark:border-pink-800">
-                    RM {event.amount}
-                  </span>
-                )}
+                {event.amount != null &&
+                  event.amount > 0 &&
+                  event.registrationStatus !== 'postponed' &&
+                  event.registrationStatus !== 'cancelled' && (
+                    <span className="rounded-full bg-pink-50 dark:bg-pink-950/60 px-2.5 py-0.5 text-xs font-bold text-[#E93998] border border-pink-200 dark:border-pink-800">
+                      RM {event.amount}
+                    </span>
+                  )}
+
 
                 {/* Badge */}
                 {event.registrationStatus === 'open' && (
@@ -60,11 +64,22 @@ export function UpcomingRuns({ events }: UpcomingRunsProps) {
                       : 'Registration Opens Soon'}
                   </span>
                 )}
+                {event.registrationStatus === 'postponed' && (
+                  <span className="rounded-full px-2.5 py-0.5 text-xs font-semibold bg-gray-100 text-gray-500">
+                    Postponed
+                  </span>
+                )}
+                {event.registrationStatus === 'cancelled' && (
+                  <span className="rounded-full px-2.5 py-0.5 text-xs font-semibold bg-gray-100 text-gray-500">
+                    Cancelled
+                  </span>
+                )}
                 {(event.registrationStatus === 'full' || event.registrationStatus === 'closed') && (
                   <span className="rounded-full px-2.5 py-0.5 text-xs font-semibold bg-gray-100 text-gray-500">
                     Registration Closed
                   </span>
                 )}
+
               </div>
             </div>
 
@@ -135,29 +150,32 @@ export function UpcomingRuns({ events }: UpcomingRunsProps) {
             )}
 
             {/* Capacity & Progress bar */}
-            {event.capacity !== null && (
-              <div className="mt-4">
-                <div className="mb-1.5 flex items-center justify-between text-xs">
-                  <span className="text-gray-400 font-medium">
-                    {event.registrationCount} of {event.capacity} registered
-                  </span>
-                  {event.registrationStatus === 'open' && event.slotsLeft !== null && (
-                    <span className="font-semibold" style={{ color: '#E93998' }}>
-                      {event.slotsLeft} slot{event.slotsLeft !== 1 ? 's' : ''} left
+            {event.capacity !== null &&
+              event.registrationStatus !== 'postponed' &&
+              event.registrationStatus !== 'cancelled' && (
+                <div className="mt-4">
+                  <div className="mb-1.5 flex items-center justify-between text-xs">
+                    <span className="text-gray-400 font-medium">
+                      {event.registrationCount} of {event.capacity} registered
                     </span>
-                  )}
+                    {event.registrationStatus === 'open' && event.slotsLeft !== null && (
+                      <span className="font-semibold" style={{ color: '#E93998' }}>
+                        {event.slotsLeft} slot{event.slotsLeft !== 1 ? 's' : ''} left
+                      </span>
+                    )}
+                  </div>
+                  <div className="h-1.5 w-full overflow-hidden rounded-full bg-gray-100">
+                    <div
+                      className="h-full rounded-full transition-all duration-500"
+                      style={{
+                        width: `${Math.min(100, (event.registrationCount / event.capacity) * 100)}%`,
+                        backgroundColor: event.registrationStatus === 'open' ? '#E93998' : '#d1d5db',
+                      }}
+                    />
+                  </div>
                 </div>
-                <div className="h-1.5 w-full overflow-hidden rounded-full bg-gray-100">
-                  <div
-                    className="h-full rounded-full transition-all duration-500"
-                    style={{
-                      width: `${Math.min(100, (event.registrationCount / event.capacity) * 100)}%`,
-                      backgroundColor: event.registrationStatus === 'open' ? '#E93998' : '#d1d5db',
-                    }}
-                  />
-                </div>
-              </div>
-            )}
+              )}
+
           </div>
         ))}
       </div>

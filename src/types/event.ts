@@ -14,8 +14,10 @@ export interface EventItem {
   slotsLeft: number | null
   isActive: boolean
   showEvent: boolean
-  isPast: boolean
-  registrationStatus: 'open' | 'not_started' | 'closed' | 'full'
+  isCancelled?: boolean
+  isPostponed?: boolean
+  registrationStatus: 'open' | 'not_started' | 'closed' | 'full' | 'postponed' | 'cancelled'
+
   paymentQrImageUrl?: string | null
   paymentInstructions?: string | null
   requiresPayment?: boolean
