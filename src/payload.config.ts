@@ -11,6 +11,7 @@ import { Media } from './collections/Media'
 import { Events } from './collections/Events'
 import { Registrations } from './collections/Registrations'
 import { Receipts } from './collections/Receipts'
+import { RefundQrs } from './collections/RefundQrs'
 
 const filename = fileURLToPath(import.meta.url)
 const dirname = path.dirname(filename)
@@ -28,7 +29,7 @@ export default buildConfig({
       },
     },
   },
-  collections: [Users, Media, Events, Registrations, Receipts],
+  collections: [Users, Media, Events, Registrations, Receipts, RefundQrs],
   editor: lexicalEditor(),
   secret: process.env.PAYLOAD_SECRET || '',
   typescript: {
@@ -49,8 +50,12 @@ export default buildConfig({
         receipts: {
           prefix: 'receipts',
         },
+        'refund-qrs': {
+          prefix: 'refund-qrs',
+        },
       },
       bucket: process.env.S3_BUCKET || '',
+
       config: {
         credentials: {
           accessKeyId: process.env.S3_ACCESS_KEY_ID || '',

@@ -72,6 +72,7 @@ export interface Config {
     events: Event;
     registrations: Registration;
     receipts: Receipt;
+    'refund-qrs': RefundQr;
     'payload-kv': PayloadKv;
     'payload-locked-documents': PayloadLockedDocument;
     'payload-preferences': PayloadPreference;
@@ -84,6 +85,7 @@ export interface Config {
     events: EventsSelect<false> | EventsSelect<true>;
     registrations: RegistrationsSelect<false> | RegistrationsSelect<true>;
     receipts: ReceiptsSelect<false> | ReceiptsSelect<true>;
+    'refund-qrs': RefundQrsSelect<false> | RefundQrsSelect<true>;
     'payload-kv': PayloadKvSelect<false> | PayloadKvSelect<true>;
     'payload-locked-documents': PayloadLockedDocumentsSelect<false> | PayloadLockedDocumentsSelect<true>;
     'payload-preferences': PayloadPreferencesSelect<false> | PayloadPreferencesSelect<true>;
@@ -212,6 +214,10 @@ export interface Event {
    */
   amount?: number | null;
   paymentInstructions?: string | null;
+  /**
+   * Managed automatically via the Cancel Event button below.
+   */
+  isCancelled?: boolean | null;
   updatedAt: string;
   createdAt: string;
 }
@@ -242,6 +248,28 @@ export interface Registration {
    * Enter a custom message to include in the decline email sent to the registrant
    */
   customDeclineReason?: string | null;
+  /**
+   * Unique secret token generated per registration for refund link
+   */
+  refundToken?: string | null;
+  refundStatus?: ('not_requested' | 'requested' | 'refunded') | null;
+  /**
+   * e.g. Maybank, CIMB, Touch n Go eWallet
+   */
+  refundBank?: string | null;
+  refundAccountName?: string | null;
+  refundAccountNumber?: string | null;
+  refundDuitnowType?: ('account' | 'qr') | null;
+  /**
+   * Uploaded DuitNow QR screenshot from attendee for 1-click scan refund
+   */
+  refundQrImage?: (number | null) | RefundQr;
+  refundRequestedAt?: string | null;
+  refundedAt?: string | null;
+  /**
+   * Internal notes or bank transfer reference number
+   */
+  refundNotes?: string | null;
   attended?: boolean | null;
   updatedAt: string;
   createdAt: string;
@@ -258,6 +286,27 @@ export interface Receipt {
    * Internal notes regarding payment verification
    */
   notes?: string | null;
+  prefix?: string | null;
+  updatedAt: string;
+  createdAt: string;
+  url?: string | null;
+  thumbnailURL?: string | null;
+  filename?: string | null;
+  mimeType?: string | null;
+  filesize?: number | null;
+  width?: number | null;
+  height?: number | null;
+  focalX?: number | null;
+  focalY?: number | null;
+}
+/**
+ * Uploaded DuitNow QR images for attendee refund processing
+ *
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "refund-qrs".
+ */
+export interface RefundQr {
+  id: number;
   prefix?: string | null;
   updatedAt: string;
   createdAt: string;
@@ -314,6 +363,10 @@ export interface PayloadLockedDocument {
     | ({
         relationTo: 'receipts';
         value: number | Receipt;
+      } | null)
+    | ({
+        relationTo: 'refund-qrs';
+        value: number | RefundQr;
       } | null);
   globalSlug?: string | null;
   user: {
@@ -418,6 +471,7 @@ export interface EventsSelect<T extends boolean = true> {
   paymentQrImage?: T;
   amount?: T;
   paymentInstructions?: T;
+  isCancelled?: T;
   updatedAt?: T;
   createdAt?: T;
 }
@@ -435,6 +489,16 @@ export interface RegistrationsSelect<T extends boolean = true> {
   status?: T;
   declineReason?: T;
   customDeclineReason?: T;
+  refundToken?: T;
+  refundStatus?: T;
+  refundBank?: T;
+  refundAccountName?: T;
+  refundAccountNumber?: T;
+  refundDuitnowType?: T;
+  refundQrImage?: T;
+  refundRequestedAt?: T;
+  refundedAt?: T;
+  refundNotes?: T;
   attended?: T;
   updatedAt?: T;
   createdAt?: T;
@@ -445,6 +509,24 @@ export interface RegistrationsSelect<T extends boolean = true> {
  */
 export interface ReceiptsSelect<T extends boolean = true> {
   notes?: T;
+  prefix?: T;
+  updatedAt?: T;
+  createdAt?: T;
+  url?: T;
+  thumbnailURL?: T;
+  filename?: T;
+  mimeType?: T;
+  filesize?: T;
+  width?: T;
+  height?: T;
+  focalX?: T;
+  focalY?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "refund-qrs_select".
+ */
+export interface RefundQrsSelect<T extends boolean = true> {
   prefix?: T;
   updatedAt?: T;
   createdAt?: T;

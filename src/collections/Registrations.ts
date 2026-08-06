@@ -1,6 +1,10 @@
 import type { CollectionConfig } from 'payload'
 import { revalidatePath } from 'next/cache'
-import { sendConfirmationEmailHelper, sendRejectionEmailHelper } from '@/lib/emails/sendEmail'
+import {
+  sendConfirmationEmailHelper,
+  sendRejectionEmailHelper,
+  sendRefundConfirmationEmailHelper,
+} from '@/lib/emails/sendEmail'
 
 export const Registrations: CollectionConfig = {
   slug: 'registrations',
@@ -12,6 +16,7 @@ export const Registrations: CollectionConfig = {
       'phone',
       'event',
       'status',
+      'refundStatus',
       'receipt',
       'attended',
       'createdAt',
@@ -28,6 +33,14 @@ export const Registrations: CollectionConfig = {
     delete: ({ req }) => !!req.user,
   },
   hooks: {
+    beforeChange: [
+      async ({ data }) => {
+        if (!data.refundToken) {
+          data.refundToken = crypto.randomUUID()
+        }
+        return data
+      },
+    ],
     afterChange: [
       async ({ doc, previousDoc, operation, req }) => {
         revalidatePath('/')
@@ -110,11 +123,67 @@ export const Registrations: CollectionConfig = {
             )
           }
         }
+
+        // Send refund completion email & auto-purge DuitNow QR screenshot when refundStatus changes to 'refunded'
+        const isRefundStatusChangedToRefunded =
+          operation === 'update' &&
+          doc.refundStatus === 'refunded' &&
+          previousDoc?.refundStatus !== 'refunded'
+
+        if (isRefundStatusChangedToRefunded) {
+          // Auto-purge DuitNow QR screenshot once refund is completed (PDPA Data Minimization & Compliance)
+          if (doc.refundQrImage) {
+            try {
+              const qrId = typeof doc.refundQrImage === 'object' ? doc.refundQrImage.id : doc.refundQrImage
+              if (qrId) {
+                await req.payload.delete({
+                  collection: 'refund-qrs',
+                  id: String(qrId),
+                })
+                console.log(`[PDPA Auto-Purge] Successfully deleted DuitNow QR image ${qrId} for registration ${doc.id} after refund completion.`)
+              }
+            } catch (purgeErr) {
+              console.error('[PDPA Auto-Purge] Error deleting QR image:', purgeErr)
+            }
+          }
+
+          if (doc.email) {
+            try {
+              let eventObj = doc.event
+              if (typeof eventObj === 'number' || typeof eventObj === 'string') {
+                eventObj = await req.payload.findByID({
+                  collection: 'events',
+                  id: String(eventObj),
+                })
+              }
+
+              if (eventObj) {
+                await sendRefundConfirmationEmailHelper({
+                  name: doc.name,
+                  email: doc.email,
+                  event: eventObj,
+                  amount: doc.amount || eventObj.amount || 0,
+                  bankName: doc.refundBank,
+                  accountNumber: doc.refundAccountNumber,
+                })
+              }
+            } catch (emailErr) {
+              console.error(
+                '[Registrations hook] Error sending refund confirmation email:',
+                emailErr,
+              )
+            }
+          }
+        }
       },
     ],
     afterDelete: [
-      () => {
-        revalidatePath('/')
+      async () => {
+        try {
+          revalidatePath('/')
+        } catch (err) {
+          console.error('[Registrations hook] Error in afterDelete revalidatePath:', err)
+        }
       },
     ],
   },
@@ -203,6 +272,95 @@ export const Registrations: CollectionConfig = {
       },
     },
     {
+      name: 'refundToken',
+      type: 'text',
+      index: true,
+      admin: {
+        position: 'sidebar',
+        readOnly: true,
+        description: 'Unique secret token generated per registration for refund link',
+      },
+    },
+    {
+      name: 'refundStatus',
+      type: 'select',
+      defaultValue: 'not_requested',
+      label: 'Refund Status',
+      options: [
+        { label: 'Not Requested', value: 'not_requested' },
+        { label: 'Refund Requested', value: 'requested' },
+        { label: 'Refund Processed', value: 'refunded' },
+      ],
+      admin: {
+        position: 'sidebar',
+      },
+    },
+    {
+      name: 'refundBank',
+      type: 'text',
+      label: 'Refund Bank Name / Provider',
+      admin: {
+        description: 'e.g. Maybank, CIMB, Touch n Go eWallet',
+      },
+    },
+    {
+      name: 'refundAccountName',
+      type: 'text',
+      label: 'Refund Account Holder Name',
+    },
+    {
+      name: 'refundAccountNumber',
+      type: 'text',
+      label: 'Refund Account Number / DuitNow ID',
+    },
+    {
+      name: 'refundDuitnowType',
+      type: 'select',
+      label: 'Refund Method Type',
+      options: [
+        { label: 'Bank Account Number', value: 'account' },
+        { label: 'DuitNow QR Image', value: 'qr' },
+      ],
+    },
+
+    {
+      name: 'refundQrImage',
+      type: 'upload',
+      relationTo: 'refund-qrs',
+      label: 'Refund DuitNow QR Image',
+      admin: {
+        description: 'Uploaded DuitNow QR screenshot from attendee for 1-click scan refund',
+      },
+    },
+
+
+    {
+      name: 'refundRequestedAt',
+      type: 'date',
+      label: 'Refund Requested At',
+      admin: {
+        position: 'sidebar',
+        date: { pickerAppearance: 'dayAndTime' },
+      },
+    },
+    {
+      name: 'refundedAt',
+      type: 'date',
+      label: 'Refunded At',
+      admin: {
+        position: 'sidebar',
+        date: { pickerAppearance: 'dayAndTime' },
+      },
+    },
+    {
+      name: 'refundNotes',
+      type: 'textarea',
+      label: 'Refund Notes / Reference',
+      admin: {
+        description: 'Internal notes or bank transfer reference number',
+      },
+    },
+    {
       name: 'attended',
       type: 'checkbox',
       label: 'Attended',
@@ -216,3 +374,4 @@ export const Registrations: CollectionConfig = {
     },
   ],
 }
+
