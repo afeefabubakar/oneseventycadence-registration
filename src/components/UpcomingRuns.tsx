@@ -7,7 +7,25 @@ interface UpcomingRunsProps {
   events: EventItem[]
 }
 
+function hasRichTextContent(content: any): boolean {
+  if (!content) return false
+  if (typeof content === 'string') return content.trim().length > 0
+  if (typeof content === 'object' && content.root && Array.isArray(content.root.children)) {
+    return content.root.children.some((child: any) => {
+      if (child.text && typeof child.text === 'string') return child.text.trim().length > 0
+      if (Array.isArray(child.children)) {
+        return child.children.some(
+          (c: any) => c.text && typeof c.text === 'string' && c.text.trim().length > 0,
+        )
+      }
+      return false
+    })
+  }
+  return false
+}
+
 export function UpcomingRuns({ events }: UpcomingRunsProps) {
+
   if (events.length === 0) return null
 
   return (
@@ -140,7 +158,7 @@ export function UpcomingRuns({ events }: UpcomingRunsProps) {
               <p className="mt-2 text-sm text-gray-400 whitespace-pre-line">{event.description}</p>
             )}
 
-            {event.direction && (
+            {hasRichTextContent(event.direction) && (
               <div className="mt-3 border-t border-dashed border-gray-100 pt-3">
                 <p className="text-xs font-semibold uppercase tracking-wider text-gray-400 mb-1">
                   Directions
@@ -148,6 +166,7 @@ export function UpcomingRuns({ events }: UpcomingRunsProps) {
                 <RichTextRenderer content={event.direction as any} />
               </div>
             )}
+
 
             {/* Capacity & Progress bar */}
             {event.capacity !== null &&
