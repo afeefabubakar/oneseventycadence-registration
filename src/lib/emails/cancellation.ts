@@ -177,7 +177,7 @@ export function cancellationEmailHtml({
               </table>
 
               <p style="margin:0;font-size:14px;color:#6b7280;line-height:1.6;">
-                If you have any questions or concerns, please reply directly to this email. We appreciate your kind understanding and support.
+                If you have any questions or concerns, please reach out to us. We appreciate your kind understanding and support.
               </p>
 
             </td>
