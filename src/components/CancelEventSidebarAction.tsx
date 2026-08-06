@@ -43,6 +43,20 @@ function renderMarkdownPreview(text: string): string {
     .join('')
 }
 
+const DEFAULT_POSTPONED_TEMPLATE = `We regret to inform you that our upcoming run has been **postponed** to a later date. We are currently working closely with our collaborators to finalize the new date as soon as possible.
+
+Here is what you need to know:
+- **Your Slot is Secured**: Your registration is **automatically carried over** to the rescheduled event date. No further action is required if you plan to join us!
+- **Full Refund Option**: If you are unable to attend on future date, you can request a full refund by clicking on the button below to fill up the refund request form.
+
+We will send an email update as soon as the new date is officially confirmed. Thank you so much for your patience, love, and understanding!`
+
+const DEFAULT_CANCELLED_TEMPLATE = `We are sad to share that our upcoming run has been **cancelled**. We know how much everyone was looking forward to running together, and we sincerely apologize for any disappointment caused.
+
+Please click the button below to fill up the refund request form so our team can process your full refund immediately.
+
+Thank you so much for your love, support, and understanding! We will be back with another run soon.`
+
 export function CancelEventSidebarAction() {
   const { id } = useDocumentInfo()
   const [mounted, setMounted] = useState(false)
@@ -50,8 +64,13 @@ export function CancelEventSidebarAction() {
   const [loading, setLoading] = useState(false)
   const [showModal, setShowModal] = useState(false)
   const [noticeType, setNoticeType] = useState<'cancelled' | 'postponed'>('cancelled')
-  const [customMessage, setCustomMessage] = useState('')
+  const [customMessage, setCustomMessage] = useState(DEFAULT_CANCELLED_TEMPLATE)
   const [activeTab, setActiveTab] = useState<'edit' | 'preview'>('edit')
+
+  const handleNoticeTypeChange = (type: 'cancelled' | 'postponed') => {
+    setNoticeType(type)
+    setCustomMessage(type === 'postponed' ? DEFAULT_POSTPONED_TEMPLATE : DEFAULT_CANCELLED_TEMPLATE)
+  }
 
   useEffect(() => {
     setMounted(true)
@@ -305,7 +324,7 @@ export function CancelEventSidebarAction() {
               <div style={{ display: 'flex', gap: '10px' }}>
                 <button
                   type="button"
-                  onClick={() => setNoticeType('cancelled')}
+                  onClick={() => handleNoticeTypeChange('cancelled')}
                   style={{
                     flex: 1,
                     padding: '8px 12px',
@@ -329,7 +348,7 @@ export function CancelEventSidebarAction() {
                 </button>
                 <button
                   type="button"
-                  onClick={() => setNoticeType('postponed')}
+                  onClick={() => handleNoticeTypeChange('postponed')}
                   style={{
                     flex: 1,
                     padding: '8px 12px',
@@ -402,17 +421,40 @@ export function CancelEventSidebarAction() {
             {/* TAB 1: EDIT MESSAGE */}
             {activeTab === 'edit' && (
               <div style={{ marginBottom: '20px' }}>
-                <label
+                <div
                   style={{
-                    display: 'block',
-                    fontSize: '12px',
-                    fontWeight: 600,
+                    display: 'flex',
+                    justifyContent: 'space-between',
+                    alignItems: 'center',
                     marginBottom: '6px',
-                    color: 'var(--theme-elevation-700, #334155)',
                   }}
                 >
-                  Main Email Message (Sent to attendees):
-                </label>
+                  <label
+                    style={{
+                      fontSize: '12px',
+                      fontWeight: 600,
+                      color: 'var(--theme-elevation-700, #334155)',
+                    }}
+                  >
+                    Main Email Message (Sent to attendees):
+                  </label>
+                  <button
+                    type="button"
+                    onClick={() => handleNoticeTypeChange(noticeType)}
+                    style={{
+                      fontSize: '11px',
+                      fontWeight: 600,
+                      color: '#E93998',
+                      background: 'none',
+                      border: 'none',
+                      cursor: 'pointer',
+                      textDecoration: 'underline',
+                    }}
+                  >
+                    Reset to Default Template
+                  </button>
+                </div>
+
                 <textarea
                   value={customMessage}
                   onChange={(e) => setCustomMessage(e.target.value)}
@@ -426,8 +468,8 @@ export function CancelEventSidebarAction() {
                     width: '100%',
                     padding: '10px 12px',
                     borderRadius: '6px',
-                    border: '1px solid var(--theme-elevation-300, #cbd5e1)',
-                    backgroundColor: 'var(--theme-elevation-100, #f8fafc)',
+                    border: '1px solid var(--theme-elevation-250, #cbd5e1)',
+                    backgroundColor: 'var(--theme-elevation-0, #ffffff)',
                     color: 'var(--theme-elevation-900, #0f172a)',
                     fontSize: '13px',
                     lineHeight: 1.5,
@@ -541,8 +583,6 @@ export function CancelEventSidebarAction() {
 
                 {/* Email Body Preview */}
                 <div style={{ padding: '24px' }}>
-
-
                   <p style={{ margin: '0 0 16px 0', fontSize: '14px', color: '#374151' }}>
                     Hi <strong>[Participant Name]</strong>,
                   </p>
