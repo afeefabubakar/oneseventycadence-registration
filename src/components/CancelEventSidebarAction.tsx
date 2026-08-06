@@ -2,7 +2,8 @@
 
 import React, { useState, useEffect } from 'react'
 import { useDocumentInfo, toast } from '@payloadcms/ui'
-import { AlertTriangle, Send, X, RefreshCw, AlertCircle } from 'lucide-react'
+import { AlertTriangle, Send, X, RefreshCw, AlertCircle, Save } from 'lucide-react'
+
 
 function renderMarkdownPreview(text: string): string {
   if (!text || !text.trim()) return ''
@@ -61,7 +62,9 @@ export function CancelEventSidebarAction() {
   const { id } = useDocumentInfo()
   const [mounted, setMounted] = useState(false)
   const [isCancelled, setIsCancelled] = useState<boolean>(false)
+  const [isPostponed, setIsPostponed] = useState<boolean>(false)
   const [loading, setLoading] = useState(false)
+  const [savingDraft, setSavingDraft] = useState(false)
   const [showModal, setShowModal] = useState(false)
   const [noticeType, setNoticeType] = useState<'cancelled' | 'postponed'>('cancelled')
 
@@ -79,6 +82,40 @@ export function CancelEventSidebarAction() {
     }
   }
 
+  const handleSaveDraft = async () => {
+    setSavingDraft(true)
+    try {
+      const res = await fetch('/api/cancel-event', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          eventId: id,
+          noticeType,
+          customMessage: customMessage.trim() || undefined,
+          saveOnly: true,
+        }),
+      })
+
+      const data = await res.json()
+
+      if (!res.ok) {
+        throw new Error(data.error || 'Failed to save template draft')
+      }
+
+      if (noticeType === 'postponed') {
+        setSavedPostponedMsg(customMessage)
+      } else {
+        setSavedCancelledMsg(customMessage)
+      }
+
+      toast.success(data.message || 'Template draft saved to event!')
+    } catch (err: any) {
+      console.error('Error saving template draft:', err)
+      toast.error(err.message || 'Failed to save template draft')
+    } finally {
+      setSavingDraft(false)
+    }
+  }
 
   useEffect(() => {
     setMounted(true)
@@ -95,6 +132,7 @@ export function CancelEventSidebarAction() {
           const data = await res.json()
           if (active && data) {
             setIsCancelled(Boolean(data.isCancelled))
+            setIsPostponed(Boolean(data.isPostponed))
             if (data.noticeMessagePostponed) {
               setSavedPostponedMsg(data.noticeMessagePostponed)
             }
@@ -114,6 +152,7 @@ export function CancelEventSidebarAction() {
       active = false
     }
   }, [id])
+
 
 
   if (!mounted || !id) return null
@@ -137,7 +176,13 @@ export function CancelEventSidebarAction() {
         throw new Error(data.error || 'Failed to update event')
       }
 
-      setIsCancelled(true)
+      if (noticeType === 'postponed') {
+        setIsPostponed(true)
+        setIsCancelled(false)
+      } else {
+        setIsCancelled(true)
+        setIsPostponed(false)
+      }
       setShowModal(false)
       toast.success(data.message || 'Notification emails sent to attendees!')
     } catch (err: any) {
@@ -147,6 +192,8 @@ export function CancelEventSidebarAction() {
       setLoading(false)
     }
   }
+
+  const isNoticeActive = isCancelled || isPostponed
 
   return (
     <div
@@ -170,21 +217,21 @@ export function CancelEventSidebarAction() {
           gap: '6px',
         }}
       >
-        <AlertTriangle size={13} style={{ color: isCancelled ? '#eab308' : '#dc2626' }} />
-        Event Status & Cancellation / Postponement
+        <AlertTriangle size={13} style={{ color: isNoticeActive ? '#eab308' : '#64748b' }} />
+        Event Status & Notice Broadcast
       </div>
 
-      {isCancelled ? (
+      {isNoticeActive ? (
         <div
           style={{
-            backgroundColor: 'rgba(234, 179, 8, 0.1)',
-            border: '1px solid rgba(234, 179, 8, 0.3)',
+            backgroundColor: isPostponed ? 'rgba(234, 179, 8, 0.1)' : 'rgba(220, 38, 38, 0.1)',
+            border: isPostponed ? '1px solid rgba(234, 179, 8, 0.3)' : '1px solid rgba(220, 38, 38, 0.3)',
             borderRadius: '6px',
             padding: '12px',
           }}
         >
-          <div style={{ fontWeight: 600, fontSize: '13px', color: '#ca8a04', marginBottom: '4px' }}>
-            📢 Event Cancelled / Postponed
+          <div style={{ fontWeight: 600, fontSize: '13px', color: isPostponed ? '#ca8a04' : '#dc2626', marginBottom: '4px' }}>
+            📢 Event {isPostponed ? 'Postponed' : 'Cancelled'}
           </div>
           <p
             style={{
@@ -219,6 +266,7 @@ export function CancelEventSidebarAction() {
           </button>
         </div>
       ) : (
+
         <div
           style={{
             backgroundColor: 'rgba(220, 38, 38, 0.05)',
@@ -669,7 +717,7 @@ export function CancelEventSidebarAction() {
               <button
                 type="button"
                 onClick={() => setShowModal(false)}
-                disabled={loading}
+                disabled={loading || savingDraft}
                 style={{
                   padding: '8px 16px',
                   borderRadius: '6px',
@@ -686,8 +734,30 @@ export function CancelEventSidebarAction() {
 
               <button
                 type="button"
+                onClick={handleSaveDraft}
+                disabled={loading || savingDraft}
+                style={{
+                  padding: '8px 16px',
+                  borderRadius: '6px',
+                  border: '1px solid var(--theme-elevation-300, #cbd5e1)',
+                  backgroundColor: 'var(--theme-elevation-100, #ffffff)',
+                  color: 'var(--theme-elevation-800, #1e293b)',
+                  fontSize: '13px',
+                  fontWeight: 600,
+                  cursor: savingDraft ? 'not-allowed' : 'pointer',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '6px',
+                }}
+              >
+                {savingDraft ? <RefreshCw size={14} className="animate-spin" /> : <Save size={14} />}
+                {savingDraft ? 'Saving...' : 'Save Draft'}
+              </button>
+
+              <button
+                type="button"
                 onClick={handleCancelEvent}
-                disabled={loading}
+                disabled={loading || savingDraft}
                 style={{
                   padding: '8px 16px',
                   borderRadius: '6px',
@@ -696,7 +766,7 @@ export function CancelEventSidebarAction() {
                   color: '#ffffff',
                   fontSize: '13px',
                   fontWeight: 600,
-                  cursor: loading ? 'not-allowed' : 'pointer',
+                  cursor: (loading || savingDraft) ? 'not-allowed' : 'pointer',
                   display: 'flex',
                   alignItems: 'center',
                   gap: '6px',
@@ -708,6 +778,7 @@ export function CancelEventSidebarAction() {
                   : `Send ${noticeType === 'postponed' ? 'Postponement' : 'Cancellation'} Notice`}
               </button>
             </div>
+
           </div>
         </div>
       )}

@@ -27,12 +27,38 @@ export async function POST(request: Request) {
 
     const noticeType = body.noticeType || 'cancelled'
     const customMessage = body.customMessage || null
+    const saveOnly = Boolean(body.saveOnly)
 
-    // Update event to isCancelled: true, isActive: false, and save per-event notice template
-    const updateData: any = {
-      isCancelled: true,
-      isActive: false,
+    if (saveOnly) {
+      const updateData: any = {}
+      if (customMessage) {
+        if (noticeType === 'postponed') {
+          updateData.noticeMessagePostponed = customMessage
+        } else {
+          updateData.noticeMessageCancelled = customMessage
+        }
+      }
+
+      await payload.update({
+        collection: 'events',
+        id: String(eventId),
+        data: updateData,
+      })
+
+      return NextResponse.json({
+        success: true,
+        message: 'Template draft saved to event.',
+        saveOnly: true,
+      })
     }
+
+    // Update event status: isActive: false, and set isPostponed or isCancelled depending on noticeType
+    const updateData: any = {
+      isActive: false,
+      isCancelled: noticeType === 'cancelled',
+      isPostponed: noticeType === 'postponed',
+    }
+
     if (customMessage) {
       if (noticeType === 'postponed') {
         updateData.noticeMessagePostponed = customMessage
@@ -46,6 +72,7 @@ export async function POST(request: Request) {
       id: String(eventId),
       data: updateData,
     })
+
 
 
 

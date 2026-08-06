@@ -42,6 +42,8 @@ export function EventRegistrationsList() {
   const { id } = useDocumentInfo()
   const [mounted, setMounted] = useState<boolean>(false)
   const [isCancelled, setIsCancelled] = useState<boolean>(false)
+  const [isPostponed, setIsPostponed] = useState<boolean>(false)
+
   const [registrations, setRegistrations] = useState<Registration[]>([])
   const [loading, setLoading] = useState<boolean>(false)
   const [searchQuery, setSearchQuery] = useState<string>('')
@@ -57,7 +59,7 @@ export function EventRegistrationsList() {
     setMounted(true)
   }, [])
 
-  // Fetch event cancellation status & registrations
+  // Fetch event cancellation/postponement status & registrations
   useEffect(() => {
     if (!id) return
 
@@ -65,12 +67,13 @@ export function EventRegistrationsList() {
     async function fetchData() {
       setLoading(true)
       try {
-        // Fetch event info to check isCancelled
+        // Fetch event info to check isCancelled & isPostponed
         const eventRes = await fetch(`/api/events/${id}`)
         if (eventRes.ok) {
           const eventData = await eventRes.json()
           if (active && eventData) {
             setIsCancelled(Boolean(eventData.isCancelled))
+            setIsPostponed(Boolean(eventData.isPostponed))
           }
         }
 
@@ -106,13 +109,16 @@ export function EventRegistrationsList() {
     }
   }, [id, refreshTrigger])
 
-  // Filter registrations based on search and dropdown filters
+  const isNoticeActive = isCancelled || isPostponed
+
+  // Filter registrations based on search query and dropdown filters
   const filteredRegistrations = useMemo(() => {
     return registrations.filter((reg) => {
       const matchesSearch =
+        !searchQuery ||
         reg.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
         reg.email.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        reg.phone.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        reg.phone.includes(searchQuery) ||
         (reg.refundBank && reg.refundBank.toLowerCase().includes(searchQuery.toLowerCase())) ||
         (reg.refundAccountName &&
           reg.refundAccountName.toLowerCase().includes(searchQuery.toLowerCase())) ||
@@ -125,7 +131,7 @@ export function EventRegistrationsList() {
         (attendedFilter === 'not-attended' && !reg.attended)
 
       const matchesRefund =
-        !isCancelled ||
+        !isNoticeActive ||
         refundFilter === 'all' ||
         (refundFilter === 'requested' && reg.refundStatus === 'requested') ||
         (refundFilter === 'refunded' && reg.refundStatus === 'refunded') ||
@@ -134,22 +140,28 @@ export function EventRegistrationsList() {
 
       return matchesSearch && matchesAttended && matchesRefund
     })
-  }, [registrations, searchQuery, attendedFilter, refundFilter, isCancelled])
+  }, [registrations, searchQuery, attendedFilter, refundFilter, isNoticeActive])
 
   // Calculate statistics from the full set of registrations
   const stats = useMemo(() => {
     const total = registrations.length
     const attended = registrations.filter((r) => r.attended).length
-    const noShow = total - attended
     const attendedPercentage = total > 0 ? Math.round((attended / total) * 100) : 0
     const refundRequested = registrations.filter((r) => r.refundStatus === 'requested').length
     const refunded = registrations.filter((r) => r.refundStatus === 'refunded').length
 
-    return { total, attended, noShow, attendedPercentage, refundRequested, refunded }
+    return {
+      total,
+      attended,
+      attendedPercentage,
+      refundRequested,
+      refunded,
+    }
   }, [registrations])
 
   // Toggle attended state
-  const handleToggleAttended = async (regId: string, currentVal: boolean) => {
+  const handleToggleAttended = async (regId: string | number, currentVal: boolean) => {
+
     setActionLoading((prev) => ({ ...prev, [`attended-${regId}`]: true }))
     const newVal = !currentVal
 
@@ -176,6 +188,7 @@ export function EventRegistrationsList() {
       setActionLoading((prev) => ({ ...prev, [`attended-${regId}`]: false }))
     }
   }
+
 
   // Toggle Refunded Status
   const handleToggleRefunded = async (regId: string, currentRefundStatus?: string) => {
@@ -494,7 +507,8 @@ export function EventRegistrationsList() {
           <option value="no">Attended: No</option>
         </select>
 
-        {isCancelled && (
+        {isNoticeActive && (
+
           <select
             value={refundFilter}
             onChange={(e) => setRefundFilter(e.target.value)}
@@ -589,7 +603,8 @@ export function EventRegistrationsList() {
                   >
                     Amount
                   </th>
-                  {isCancelled && (
+                  {isNoticeActive && (
+
                     <th
                       style={{
                         textAlign: 'left',
@@ -602,7 +617,8 @@ export function EventRegistrationsList() {
                       Refund Details
                     </th>
                   )}
-                  {isCancelled && (
+                  {isNoticeActive && (
+
                     <th
                       style={{
                         textAlign: 'center',
@@ -675,7 +691,8 @@ export function EventRegistrationsList() {
                         {reg.amount ? `RM ${reg.amount}` : '-'}
                       </td>
 
-                      {isCancelled && (
+                      {isNoticeActive && (
+
                         <td style={{ padding: '12px' }}>
                           <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
                             {/* Bank Transfer Submission */}
@@ -795,7 +812,8 @@ export function EventRegistrationsList() {
                         </td>
                       )}
 
-                      {isCancelled && (
+                      {isNoticeActive && (
+
                         <td style={{ padding: '12px', textAlign: 'center' }}>
                           <input
                             type="checkbox"

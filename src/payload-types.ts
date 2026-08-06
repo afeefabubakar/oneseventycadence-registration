@@ -215,9 +215,13 @@ export interface Event {
   amount?: number | null;
   paymentInstructions?: string | null;
   /**
-   * Managed automatically via the Cancel Event button below.
+   * Managed automatically via the Cancel / Postpone Event button below.
    */
   isCancelled?: boolean | null;
+  /**
+   * Managed automatically via the Cancel / Postpone Event button below.
+   */
+  isPostponed?: boolean | null;
   noticeMessagePostponed?: string | null;
   noticeMessageCancelled?: string | null;
   updatedAt: string;
@@ -474,6 +478,7 @@ export interface EventsSelect<T extends boolean = true> {
   amount?: T;
   paymentInstructions?: T;
   isCancelled?: T;
+  isPostponed?: T;
   noticeMessagePostponed?: T;
   noticeMessageCancelled?: T;
   updatedAt?: T;

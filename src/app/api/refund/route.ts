@@ -68,6 +68,8 @@ export async function GET(request: Request) {
           date: eventDate,
           location: eventObj?.location || '',
           isCancelled: Boolean(eventObj?.isCancelled),
+          isPostponed: Boolean(eventObj?.isPostponed),
+
         },
       },
     })

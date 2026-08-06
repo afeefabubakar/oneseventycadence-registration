@@ -157,9 +157,21 @@ export const Events: CollectionConfig = {
       admin: {
         position: 'sidebar',
         readOnly: true,
-        description: 'Managed automatically via the Cancel Event button below.',
+        description: 'Managed automatically via the Cancel / Postpone Event button below.',
       },
     },
+    {
+      name: 'isPostponed',
+      type: 'checkbox',
+      label: 'Event Postponed Status',
+      defaultValue: false,
+      admin: {
+        position: 'sidebar',
+        readOnly: true,
+        description: 'Managed automatically via the Cancel / Postpone Event button below.',
+      },
+    },
+
 
     {
       name: 'noticeMessagePostponed',
