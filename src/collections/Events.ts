@@ -148,6 +148,30 @@ export const Events: CollectionConfig = {
         placeholder: 'e.g. Please scan the DuitNow QR code above and transfer the registration fee.',
       },
     },
+
+    {
+      name: 'isCancelled',
+      type: 'checkbox',
+      label: 'Event Cancelled Status',
+      defaultValue: false,
+      admin: {
+        position: 'sidebar',
+        readOnly: true,
+        description: 'Managed automatically via the Cancel Event button below.',
+      },
+    },
+
+
+    {
+      name: 'cancelEventSidebarAction',
+      type: 'ui',
+      admin: {
+        position: 'sidebar',
+        components: {
+          Field: '/components/CancelEventSidebarAction#CancelEventSidebarAction',
+        },
+      },
+    },
     {
       name: 'registrationsList',
       type: 'ui',
@@ -159,3 +183,4 @@ export const Events: CollectionConfig = {
     },
   ],
 }
+
