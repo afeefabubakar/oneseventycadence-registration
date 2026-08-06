@@ -67,8 +67,24 @@ export function cancellationEmailHtml({
   noticeType = 'cancelled',
   customMessage,
 }: CancellationEmailProps): string {
-  const baseUrl = (process.env.NEXT_PUBLIC_SERVER_URL || 'http://localhost:3000').replace(/\/$/, '')
+  const getBaseUrl = () => {
+    if (process.env.NEXT_PUBLIC_SERVER_URL) {
+      return process.env.NEXT_PUBLIC_SERVER_URL.replace(/\/$/, '')
+    }
+    if (process.env.VERCEL_PROJECT_PRODUCTION_URL) {
+      return `https://${process.env.VERCEL_PROJECT_PRODUCTION_URL}`
+    }
+    if (process.env.VERCEL_URL) {
+      return `https://${process.env.VERCEL_URL}`
+    }
+    return process.env.NODE_ENV === 'production'
+      ? 'https://registration.oneseventycadence.com'
+      : 'http://localhost:3000'
+  }
+
+  const baseUrl = getBaseUrl()
   const refundUrl = `${baseUrl}/refund/${refundToken}`
+
   const formattedAmount = amount && amount > 0 ? `RM ${amount.toFixed(2)}` : null
   const isPostponed = noticeType === 'postponed'
 
@@ -85,7 +101,6 @@ export function cancellationEmailHtml({
     ? 'If you cannot make it to the postponed event date, please click below to submit your bank account or DuitNow QR details for a full refund.'
     : 'Please click the button below to submit your bank account or DuitNow QR details so our team can process your refund.'
   const buttonText = isPostponed ? 'Request Refund →' : 'Submit Refund Details →'
-
 
   // Format body HTML using simple markdown parser
   let bodyHtml = ''
@@ -153,27 +168,7 @@ export function cancellationEmailHtml({
                         ${buttonText}
                       </a>
                     </div>
-                    <p style="margin:16px 0 0 0;font-size:12px;color:#94a3b8;">
-                      Or copy this link: <a href="${refundUrl}" style="color:#E93998;">${refundUrl}</a>
-                    </p>
                   </td>
-                </tr>
-              </table>
-
-              <!-- Event Details Summary -->
-              <p style="margin:0 0 12px 0;font-size:13px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:#6b7280;">Event Summary</p>
-              <table width="100%" cellpadding="0" cellspacing="0" style="background-color:#ffffff;border:1px solid #f1f5f9;border-radius:10px;margin-bottom:24px;">
-                <tr>
-                  <td style="padding:14px 20px;border-bottom:1px solid #f1f5f9;width:35%;font-size:13px;color:#64748b;">Event Name</td>
-                  <td style="padding:14px 20px;border-bottom:1px solid #f1f5f9;font-size:14px;font-weight:600;color:#0f172a;">${eventName}</td>
-                </tr>
-                <tr>
-                  <td style="padding:14px 20px;border-bottom:1px solid #f1f5f9;font-size:13px;color:#64748b;">Date</td>
-                  <td style="padding:14px 20px;border-bottom:1px solid #f1f5f9;font-size:14px;font-weight:600;color:#0f172a;">${eventDate}</td>
-                </tr>
-                <tr>
-                  <td style="padding:14px 20px;font-size:13px;color:#64748b;">Location</td>
-                  <td style="padding:14px 20px;font-size:14px;font-weight:600;color:#0f172a;">${eventLocation}</td>
                 </tr>
               </table>
 
