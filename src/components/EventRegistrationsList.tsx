@@ -2,15 +2,15 @@
 
 import React, { useEffect, useState, useMemo } from 'react'
 import { useDocumentInfo, toast } from '@payloadcms/ui'
-import { 
-  Search, 
-  Mail, 
-  Phone, 
-  User, 
-  ExternalLink, 
-  Check, 
-  X, 
-  RefreshCw, 
+import {
+  Search,
+  Mail,
+  Phone,
+  User,
+  ExternalLink,
+  Check,
+  X,
+  RefreshCw,
   Plus,
   Users,
   CheckCircle2,
@@ -18,7 +18,7 @@ import {
   QrCode,
   Copy,
   CheckCheck,
-  DollarSign
+  DollarSign,
 } from 'lucide-react'
 
 interface Registration {
@@ -77,7 +77,7 @@ export function EventRegistrationsList() {
         // Fetch registrations
         const query = { event: { equals: id } }
         const url = `/api/registrations?where=${encodeURIComponent(
-          JSON.stringify(query)
+          JSON.stringify(query),
         )}&limit=1000&sort=-createdAt`
 
         const res = await fetch(url)
@@ -114,8 +114,10 @@ export function EventRegistrationsList() {
         reg.email.toLowerCase().includes(searchQuery.toLowerCase()) ||
         reg.phone.toLowerCase().includes(searchQuery.toLowerCase()) ||
         (reg.refundBank && reg.refundBank.toLowerCase().includes(searchQuery.toLowerCase())) ||
-        (reg.refundAccountName && reg.refundAccountName.toLowerCase().includes(searchQuery.toLowerCase())) ||
-        (reg.refundAccountNumber && reg.refundAccountNumber.toLowerCase().includes(searchQuery.toLowerCase()))
+        (reg.refundAccountName &&
+          reg.refundAccountName.toLowerCase().includes(searchQuery.toLowerCase())) ||
+        (reg.refundAccountNumber &&
+          reg.refundAccountNumber.toLowerCase().includes(searchQuery.toLowerCase()))
 
       const matchesAttended =
         attendedFilter === 'all' ||
@@ -127,7 +129,8 @@ export function EventRegistrationsList() {
         refundFilter === 'all' ||
         (refundFilter === 'requested' && reg.refundStatus === 'requested') ||
         (refundFilter === 'refunded' && reg.refundStatus === 'refunded') ||
-        (refundFilter === 'not_requested' && (reg.refundStatus === 'not_requested' || !reg.refundStatus))
+        (refundFilter === 'not_requested' &&
+          (reg.refundStatus === 'not_requested' || !reg.refundStatus))
 
       return matchesSearch && matchesAttended && matchesRefund
     })
@@ -162,14 +165,10 @@ export function EventRegistrationsList() {
       }
 
       setRegistrations((prev) =>
-        prev.map((reg) => (reg.id === regId ? { ...reg, attended: newVal } : reg))
+        prev.map((reg) => (reg.id === regId ? { ...reg, attended: newVal } : reg)),
       )
 
-      toast.success(
-        newVal
-          ? 'Marked registrant as attended'
-          : 'Removed attendance for registrant'
-      )
+      toast.success(newVal ? 'Marked registrant as attended' : 'Removed attendance for registrant')
     } catch (err) {
       console.error(err)
       toast.error('Failed to update attendance status')
@@ -199,11 +198,7 @@ export function EventRegistrationsList() {
       }
 
       setRegistrations((prev) =>
-        prev.map((reg) =>
-          reg.id === regId
-            ? { ...reg, refundStatus: newStatus as any }
-            : reg
-        )
+        prev.map((reg) => (reg.id === regId ? { ...reg, refundStatus: newStatus as any } : reg)),
       )
 
       if (newStatus === 'refunded') {
@@ -287,7 +282,6 @@ export function EventRegistrationsList() {
             type="button"
             onClick={() => setRefreshTrigger((prev) => prev + 1)}
             disabled={loading}
-
             style={{
               display: 'inline-flex',
               alignItems: 'center',
@@ -344,10 +338,24 @@ export function EventRegistrationsList() {
             padding: '12px 16px',
           }}
         >
-          <div style={{ fontSize: '11px', color: 'var(--theme-elevation-500, #64748b)', fontWeight: 600, textTransform: 'uppercase' }}>
+          <div
+            style={{
+              fontSize: '11px',
+              color: 'var(--theme-elevation-500, #64748b)',
+              fontWeight: 600,
+              textTransform: 'uppercase',
+            }}
+          >
             Total Registered
           </div>
-          <div style={{ fontSize: '20px', fontWeight: 800, marginTop: '4px', color: 'var(--theme-elevation-900, #0f172a)' }}>
+          <div
+            style={{
+              fontSize: '20px',
+              fontWeight: 800,
+              marginTop: '4px',
+              color: 'var(--theme-elevation-900, #0f172a)',
+            }}
+          >
             {stats.total}
           </div>
         </div>
@@ -360,7 +368,14 @@ export function EventRegistrationsList() {
             padding: '12px 16px',
           }}
         >
-          <div style={{ fontSize: '11px', color: 'var(--theme-elevation-500, #64748b)', fontWeight: 600, textTransform: 'uppercase' }}>
+          <div
+            style={{
+              fontSize: '11px',
+              color: 'var(--theme-elevation-500, #64748b)',
+              fontWeight: 600,
+              textTransform: 'uppercase',
+            }}
+          >
             Attended
           </div>
           <div style={{ fontSize: '20px', fontWeight: 800, marginTop: '4px', color: '#16a34a' }}>
@@ -378,10 +393,19 @@ export function EventRegistrationsList() {
                 padding: '12px 16px',
               }}
             >
-              <div style={{ fontSize: '11px', color: '#d97706', fontWeight: 600, textTransform: 'uppercase' }}>
+              <div
+                style={{
+                  fontSize: '11px',
+                  color: '#d97706',
+                  fontWeight: 600,
+                  textTransform: 'uppercase',
+                }}
+              >
                 Refund Requested
               </div>
-              <div style={{ fontSize: '20px', fontWeight: 800, marginTop: '4px', color: '#d97706' }}>
+              <div
+                style={{ fontSize: '20px', fontWeight: 800, marginTop: '4px', color: '#d97706' }}
+              >
                 {stats.refundRequested}
               </div>
             </div>
@@ -393,10 +417,19 @@ export function EventRegistrationsList() {
                 padding: '12px 16px',
               }}
             >
-              <div style={{ fontSize: '11px', color: '#16a34a', fontWeight: 600, textTransform: 'uppercase' }}>
+              <div
+                style={{
+                  fontSize: '11px',
+                  color: '#16a34a',
+                  fontWeight: 600,
+                  textTransform: 'uppercase',
+                }}
+              >
                 Refunded
               </div>
-              <div style={{ fontSize: '20px', fontWeight: 800, marginTop: '4px', color: '#16a34a' }}>
+              <div
+                style={{ fontSize: '20px', fontWeight: 800, marginTop: '4px', color: '#16a34a' }}
+              >
                 {stats.refunded}
               </div>
             </div>
@@ -414,7 +447,15 @@ export function EventRegistrationsList() {
         }}
       >
         <div style={{ position: 'relative', flex: '1', minWidth: '200px' }}>
-          <span style={{ position: 'absolute', left: '10px', top: '50%', transform: 'translateY(-50%)', color: 'var(--theme-elevation-400, #94a3b8)' }}>
+          <span
+            style={{
+              position: 'absolute',
+              left: '10px',
+              top: '50%',
+              transform: 'translateY(-50%)',
+              color: 'var(--theme-elevation-400, #94a3b8)',
+            }}
+          >
             <Search size={16} />
           </span>
           <input
@@ -485,27 +526,128 @@ export function EventRegistrationsList() {
         }}
       >
         {loading ? (
-          <div style={{ padding: '40px', textAlign: 'center', color: 'var(--theme-elevation-500, #64748b)' }}>
-            <RefreshCw size={24} className="animate-spin" style={{ margin: '0 auto 8px auto', display: 'block' }} />
+          <div
+            style={{
+              padding: '40px',
+              textAlign: 'center',
+              color: 'var(--theme-elevation-500, #64748b)',
+            }}
+          >
+            <RefreshCw
+              size={24}
+              className="animate-spin"
+              style={{ margin: '0 auto 8px auto', display: 'block' }}
+            />
             Loading registrations...
           </div>
         ) : filteredRegistrations.length === 0 ? (
-          <div style={{ padding: '40px', textAlign: 'center', color: 'var(--theme-elevation-500, #64748b)' }}>
+          <div
+            style={{
+              padding: '40px',
+              textAlign: 'center',
+              color: 'var(--theme-elevation-500, #64748b)',
+            }}
+          >
             <p style={{ margin: 0 }}>No registrations found.</p>
           </div>
         ) : (
           <div style={{ overflowX: 'auto' }}>
-            <table className="event-registrations-table" style={{ width: '100%', borderCollapse: 'collapse' }}>
+            <table
+              className="event-registrations-table"
+              style={{ width: '100%', borderCollapse: 'collapse' }}
+            >
               <thead>
                 <tr>
-                  <th style={{ textAlign: 'left', padding: '12px', fontSize: '12px', color: 'var(--theme-elevation-500, #64748b)' }}>Name</th>
-                  <th style={{ textAlign: 'left', padding: '12px', fontSize: '12px', color: 'var(--theme-elevation-500, #64748b)' }}>Contact</th>
-                  <th style={{ textAlign: 'left', padding: '12px', fontSize: '12px', color: 'var(--theme-elevation-500, #64748b)', width: '80px' }}>Amount</th>
-                  {isCancelled && <th style={{ textAlign: 'left', padding: '12px', fontSize: '12px', color: 'var(--theme-elevation-500, #64748b)', width: '220px' }}>Refund Details</th>}
-                  {isCancelled && <th style={{ textAlign: 'center', padding: '12px', fontSize: '12px', color: 'var(--theme-elevation-500, #64748b)', width: '80px' }}>Refunded</th>}
-                  <th style={{ textAlign: 'center', padding: '12px', fontSize: '12px', color: 'var(--theme-elevation-500, #64748b)', width: '80px' }}>Attended</th>
-                  <th style={{ textAlign: 'left', padding: '12px', fontSize: '12px', color: 'var(--theme-elevation-500, #64748b)', width: '130px' }}>Registered At</th>
-                  <th style={{ textAlign: 'right', padding: '12px', fontSize: '12px', color: 'var(--theme-elevation-500, #64748b)', width: '60px' }}>Actions</th>
+                  <th
+                    style={{
+                      textAlign: 'left',
+                      padding: '12px',
+                      fontSize: '12px',
+                      color: 'var(--theme-elevation-500, #64748b)',
+                    }}
+                  >
+                    Name
+                  </th>
+                  <th
+                    style={{
+                      textAlign: 'left',
+                      padding: '12px',
+                      fontSize: '12px',
+                      color: 'var(--theme-elevation-500, #64748b)',
+                    }}
+                  >
+                    Contact
+                  </th>
+                  <th
+                    style={{
+                      textAlign: 'left',
+                      padding: '12px',
+                      fontSize: '12px',
+                      color: 'var(--theme-elevation-500, #64748b)',
+                      width: '80px',
+                    }}
+                  >
+                    Amount
+                  </th>
+                  {isCancelled && (
+                    <th
+                      style={{
+                        textAlign: 'left',
+                        padding: '12px',
+                        fontSize: '12px',
+                        color: 'var(--theme-elevation-500, #64748b)',
+                        width: '220px',
+                      }}
+                    >
+                      Refund Details
+                    </th>
+                  )}
+                  {isCancelled && (
+                    <th
+                      style={{
+                        textAlign: 'center',
+                        padding: '12px',
+                        fontSize: '12px',
+                        color: 'var(--theme-elevation-500, #64748b)',
+                        width: '80px',
+                      }}
+                    >
+                      Refunded
+                    </th>
+                  )}
+                  <th
+                    style={{
+                      textAlign: 'center',
+                      padding: '12px',
+                      fontSize: '12px',
+                      color: 'var(--theme-elevation-500, #64748b)',
+                      width: '80px',
+                    }}
+                  >
+                    Attended
+                  </th>
+                  <th
+                    style={{
+                      textAlign: 'left',
+                      padding: '12px',
+                      fontSize: '12px',
+                      color: 'var(--theme-elevation-500, #64748b)',
+                      width: '130px',
+                    }}
+                  >
+                    Registered At
+                  </th>
+                  <th
+                    style={{
+                      textAlign: 'right',
+                      padding: '12px',
+                      fontSize: '12px',
+                      color: 'var(--theme-elevation-500, #64748b)',
+                      width: '60px',
+                    }}
+                  >
+                    Actions
+                  </th>
                 </tr>
               </thead>
               <tbody>
@@ -513,54 +655,85 @@ export function EventRegistrationsList() {
                   const isAttendedLoading = actionLoading[`attended-${reg.id}`]
                   const isRefundLoading = actionLoading[`refund-${reg.id}`]
                   const isRefunded = reg.refundStatus === 'refunded'
-                  const bankInfoString = reg.refundBank && reg.refundAccountNumber
-                    ? `${reg.refundBank} - ${reg.refundAccountName} (${reg.refundAccountNumber})`
-                    : ''
+                  const bankInfoString =
+                    reg.refundBank && reg.refundAccountNumber
+                      ? `${reg.refundBank} - ${reg.refundAccountName} (${reg.refundAccountNumber})`
+                      : ''
 
                   return (
-                    <tr key={reg.id} style={{ borderTop: '1px solid var(--theme-elevation-150, #e2e8f0)' }}>
+                    <tr
+                      key={reg.id}
+                      style={{ borderTop: '1px solid var(--theme-elevation-150, #e2e8f0)' }}
+                    >
                       <td style={{ padding: '12px', fontSize: '14px' }}>{reg.name}</td>
                       <td style={{ padding: '12px', fontSize: '13px' }}>
-                        {reg.email}<br />{reg.phone}
+                        {reg.email}
+                        <br />
+                        {reg.phone}
                       </td>
-                      <td style={{ padding: '12px', fontSize: '14px', fontWeight: 600 }}>{reg.amount ? `RM ${reg.amount}` : '-'}</td>
+                      <td style={{ padding: '12px', fontSize: '14px', fontWeight: 600 }}>
+                        {reg.amount ? `RM ${reg.amount}` : '-'}
+                      </td>
 
                       {isCancelled && (
                         <td style={{ padding: '12px' }}>
                           <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
                             {/* Bank Transfer Submission */}
                             {!reg.refundQrImage && reg.refundBank && (
-                              <div
-                                style={{
-                                  fontSize: '11px',
-                                  color: 'var(--theme-elevation-700, #334155)',
-                                  backgroundColor: 'var(--theme-elevation-100, #f8fafc)',
-                                  padding: '4px 8px',
-                                  borderRadius: '4px',
-                                  border: '1px solid var(--theme-elevation-200, #e2e8f0)',
-                                  display: 'flex',
-                                  justifyContent: 'space-between',
-                                  alignItems: 'center',
-                                  gap: '6px',
-                                }}
-                              >
-                                <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', maxWidth: '160px' }}>
-                                  <strong>{reg.refundBank}</strong>: {reg.refundAccountName} ({reg.refundAccountNumber})
-                                </span>
-                                <button
-                                  type="button"
-                                  title="Copy Bank Details"
-                                  onClick={() => copyToClipboard(bankInfoString, reg.id)}
+                              <div style={{ display: 'flex', flexDirection: 'column', gap: '3px' }}>
+                                {/* Informational Text Outside */}
+                                <span
                                   style={{
-                                    background: 'none',
-                                    border: 'none',
-                                    cursor: 'pointer',
-                                    color: copiedId === reg.id ? '#16a34a' : '#64748b',
-                                    padding: 0,
+                                    fontSize: '11px',
+                                    color: 'var(--theme-elevation-700, #334155)',
+                                    fontWeight: 500,
                                   }}
                                 >
-                                  {copiedId === reg.id ? <CheckCheck size={13} /> : <Copy size={13} />}
-                                </button>
+                                  <strong>{reg.refundBank}</strong>
+                                  <br />
+                                  {reg.refundAccountName}
+                                </span>
+                                {/* Account Number Copy Button */}
+                                {reg.refundAccountNumber && (
+                                  <button
+                                    type="button"
+                                    title="Click to copy Account Number"
+                                    onClick={() =>
+                                      copyToClipboard(reg.refundAccountNumber || '', reg.id)
+                                    }
+                                    style={{
+                                      fontSize: '11px',
+                                      fontWeight: 600,
+                                      fontFamily: 'monospace',
+                                      color:
+                                        copiedId === reg.id
+                                          ? '#16a34a'
+                                          : 'var(--theme-elevation-900, #0f172a)',
+                                      backgroundColor:
+                                        copiedId === reg.id
+                                          ? 'rgba(22, 163, 74, 0.1)'
+                                          : 'var(--theme-elevation-100, #f1f5f9)',
+                                      border:
+                                        copiedId === reg.id
+                                          ? '1px solid #16a34a'
+                                          : '1px solid var(--theme-elevation-300, #cbd5e1)',
+                                      borderRadius: '4px',
+                                      padding: '2px 8px',
+                                      cursor: 'pointer',
+                                      width: 'fit-content',
+                                      display: 'inline-flex',
+                                      alignItems: 'center',
+                                      gap: '6px',
+                                    }}
+                                  >
+                                    <span>{reg.refundAccountNumber}</span>
+                                    {copiedId === reg.id ? (
+                                      <CheckCheck size={12} style={{ color: '#16a34a' }} />
+                                    ) : (
+                                      <Copy size={12} style={{ color: '#64748b' }} />
+                                    )}
+                                  </button>
+                                )}
                               </div>
                             )}
 
@@ -568,13 +741,25 @@ export function EventRegistrationsList() {
                             {reg.refundQrImage && (
                               <div style={{ display: 'flex', flexDirection: 'column', gap: '2px' }}>
                                 {reg.refundAccountName && (
-                                  <span style={{ fontSize: '11px', fontWeight: 600, color: 'var(--theme-elevation-800, #1e293b)' }}>
+                                  <span
+                                    style={{
+                                      fontSize: '11px',
+                                      fontWeight: 600,
+                                      color: 'var(--theme-elevation-800, #1e293b)',
+                                    }}
+                                  >
                                     {reg.refundAccountName}
                                   </span>
                                 )}
                                 <button
                                   type="button"
-                                  onClick={() => setViewingQrUrl(typeof reg.refundQrImage === 'object' ? reg.refundQrImage.url : reg.refundQrImage)}
+                                  onClick={() =>
+                                    setViewingQrUrl(
+                                      typeof reg.refundQrImage === 'object'
+                                        ? reg.refundQrImage.url
+                                        : reg.refundQrImage,
+                                    )
+                                  }
                                   style={{
                                     fontSize: '11px',
                                     fontWeight: 600,
@@ -597,13 +782,18 @@ export function EventRegistrationsList() {
                             )}
 
                             {!reg.refundBank && !reg.refundQrImage && (
-                              <span style={{ fontSize: '12px', color: 'var(--theme-elevation-400, #94a3b8)' }}>-</span>
+                              <span
+                                style={{
+                                  fontSize: '12px',
+                                  color: 'var(--theme-elevation-400, #94a3b8)',
+                                }}
+                              >
+                                -
+                              </span>
                             )}
                           </div>
                         </td>
                       )}
-
-
 
                       {isCancelled && (
                         <td style={{ padding: '12px', textAlign: 'center' }}>
@@ -632,7 +822,10 @@ export function EventRegistrationsList() {
                       </td>
 
                       <td style={{ padding: '12px', textAlign: 'right' }}>
-                        <a href={`/admin/collections/registrations/${reg.id}`} style={{ color: '#64748b' }}>
+                        <a
+                          href={`/admin/collections/registrations/${reg.id}`}
+                          style={{ color: '#64748b' }}
+                        >
                           <ExternalLink size={16} />
                         </a>
                       </td>
@@ -675,8 +868,17 @@ export function EventRegistrationsList() {
             }}
             onClick={(e) => e.stopPropagation()}
           >
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
-              <h4 style={{ margin: 0, fontSize: '16px', fontWeight: 700, color: '#0f172a' }}>DuitNow QR Code</h4>
+            <div
+              style={{
+                display: 'flex',
+                justifyContent: 'space-between',
+                alignItems: 'center',
+                marginBottom: '16px',
+              }}
+            >
+              <h4 style={{ margin: 0, fontSize: '16px', fontWeight: 700, color: '#0f172a' }}>
+                DuitNow QR Code
+              </h4>
               <button
                 type="button"
                 onClick={() => setViewingQrUrl(null)}
@@ -685,8 +887,26 @@ export function EventRegistrationsList() {
                 <X size={20} />
               </button>
             </div>
-            <img src={viewingQrUrl} alt="Attendee DuitNow QR Code" style={{ width: '100%', height: 'auto', maxHeight: '320px', objectFit: 'contain', borderRadius: '8px', border: '1px solid #e2e8f0' }} />
-            <p style={{ fontSize: '12px', color: '#64748b', marginTop: '12px', margin: '12px 0 0 0' }}>
+            <img
+              src={viewingQrUrl}
+              alt="Attendee DuitNow QR Code"
+              style={{
+                width: '100%',
+                height: 'auto',
+                maxHeight: '320px',
+                objectFit: 'contain',
+                borderRadius: '8px',
+                border: '1px solid #e2e8f0',
+              }}
+            />
+            <p
+              style={{
+                fontSize: '12px',
+                color: '#64748b',
+                marginTop: '12px',
+                margin: '12px 0 0 0',
+              }}
+            >
               Scan this QR code using your banking app to process the refund.
             </p>
           </div>
