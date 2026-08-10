@@ -37,9 +37,9 @@ export function rejectionEmailHtml({
       <td align="center">
         <table width="600" cellpadding="0" cellspacing="0" style="max-width:600px;width:100%;background-color:#ffffff;border-radius:12px;overflow:hidden;box-shadow:0 4px 24px rgba(0,0,0,0.08);">
 
-          <!-- Header -->
+          <!-- Header (Brand Gradient) -->
           <tr>
-            <td style="background:linear-gradient(135deg,#e11d48 0%,#f43f5e 100%);padding:48px 40px;text-align:center;">
+            <td style="background:linear-gradient(135deg,#E93998 0%,#ff73b9 100%);padding:48px 40px;text-align:center;">
               <p style="margin:0 0 8px 0;font-size:13px;font-weight:600;letter-spacing:3px;text-transform:uppercase;color:rgba(255,255,255,0.9);">oneseventycadence</p>
               <h1 style="margin:0 0 8px 0;font-size:28px;font-weight:700;color:#ffffff;letter-spacing:-0.5px;">Registration Declined ⚠️</h1>
               <p style="margin:0;font-size:15px;color:rgba(255,255,255,0.95);">Payment verification issue for your registration</p>
@@ -61,12 +61,12 @@ export function rejectionEmailHtml({
               ${
                 formattedReason
                   ? `
-              <!-- Reason Box -->
-              <table width="100%" cellpadding="0" cellspacing="0" style="background-color:#fff1f2;border:1px solid #fecdd3;border-left:4px solid #e11d48;border-radius:8px;margin-bottom:28px;">
+              <!-- Reason Box (Brand Styling) -->
+              <table width="100%" cellpadding="0" cellspacing="0" style="background-color:#fdf2f8;border:1px solid #fbcfe8;border-left:4px solid #E93998;border-radius:8px;margin-bottom:28px;">
                 <tr>
                   <td style="padding:16px 20px;">
-                    <p style="margin:0 0 4px 0;font-size:12px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:#9f1239;">Reason / Notes</p>
-                    <div style="font-size:14px;color:#881337;line-height:1.5;white-space:pre-line;">${formattedReason}</div>
+                    <p style="margin:0 0 4px 0;font-size:12px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:#be185d;">Reason / Notes</p>
+                    <div style="font-size:14px;color:#9d174d;line-height:1.5;white-space:pre-line;">${formattedReason}</div>
                   </td>
                 </tr>
               </table>

@@ -31,9 +31,9 @@ export function refundConfirmationEmailHtml({
       <td align="center">
         <table width="600" cellpadding="0" cellspacing="0" style="max-width:600px;width:100%;background-color:#ffffff;border-radius:12px;overflow:hidden;box-shadow:0 4px 24px rgba(0,0,0,0.08);">
 
-          <!-- Header -->
+          <!-- Header (Brand Gradient) -->
           <tr>
-            <td style="background:linear-gradient(135deg,#16a34a 0%,#22c55e 100%);padding:44px 40px;text-align:center;">
+            <td style="background:linear-gradient(135deg,#E93998 0%,#ff73b9 100%);padding:44px 40px;text-align:center;">
               <p style="margin:0 0 8px 0;font-size:13px;font-weight:600;letter-spacing:3px;text-transform:uppercase;color:rgba(255,255,255,0.9);">oneseventycadence</p>
               <h1 style="margin:0 0 8px 0;font-size:28px;font-weight:700;color:#ffffff;letter-spacing:-0.5px;">Refund Processed ✅</h1>
               <p style="margin:0;font-size:15px;color:rgba(255,255,255,0.95);">Your payment has been successfully refunded</p>
@@ -52,31 +52,31 @@ export function refundConfirmationEmailHtml({
                 Great news! We have processed your refund of <strong>${formattedAmount}</strong> for <strong>${eventName}</strong> via Instant Bank Transfer / DuitNow.
               </p>
 
-              <!-- Transaction Summary Card -->
-              <table width="100%" cellpadding="0" cellspacing="0" style="background-color:#f0fdf4;border:1px solid #dcfce7;border-left:4px solid #16a34a;border-radius:10px;margin-bottom:32px;">
+              <!-- Transaction Summary Card (Brand Styling) -->
+              <table width="100%" cellpadding="0" cellspacing="0" style="background-color:#fdf2f8;border:1px solid #fbcfe8;border-left:4px solid #E93998;border-radius:10px;margin-bottom:32px;">
                 <tr>
                   <td style="padding:24px;">
-                    <p style="margin:0 0 4px 0;font-size:11px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:#15803d;">Transfer Details</p>
-                    <h2 style="margin:0 0 16px 0;font-size:24px;font-weight:800;color:#16a34a;">${formattedAmount}</h2>
+                    <p style="margin:0 0 4px 0;font-size:11px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:#be185d;">Transfer Details</p>
+                    <h2 style="margin:0 0 16px 0;font-size:24px;font-weight:800;color:#E93998;">${formattedAmount}</h2>
 
                     <table width="100%" cellpadding="0" cellspacing="0">
                       <tr>
-                        <td style="padding:8px 0;border-top:1px solid #dcfce7;width:40%;font-size:13px;color:#4b5563;">Event</td>
-                        <td style="padding:8px 0;border-top:1px solid #dcfce7;font-size:14px;font-weight:600;color:#111827;">${eventName}</td>
+                        <td style="padding:8px 0;border-top:1px solid #fbcfe8;width:40%;font-size:13px;color:#4b5563;">Event</td>
+                        <td style="padding:8px 0;border-top:1px solid #fbcfe8;font-size:14px;font-weight:600;color:#111827;">${eventName}</td>
                       </tr>
                       ${
                         bankName
                           ? `<tr>
-                        <td style="padding:8px 0;border-top:1px solid #dcfce7;font-size:13px;color:#4b5563;">Bank / Provider</td>
-                        <td style="padding:8px 0;border-top:1px solid #dcfce7;font-size:14px;font-weight:600;color:#111827;">${bankName}</td>
+                        <td style="padding:8px 0;border-top:1px solid #fbcfe8;font-size:13px;color:#4b5563;">Bank / Provider</td>
+                        <td style="padding:8px 0;border-top:1px solid #fbcfe8;font-size:14px;font-weight:600;color:#111827;">${bankName}</td>
                       </tr>`
                           : ''
                       }
                       ${
                         accountNumber
                           ? `<tr>
-                        <td style="padding:8px 0;border-top:1px solid #dcfce7;font-size:13px;color:#4b5563;">Account / DuitNow ID</td>
-                        <td style="padding:8px 0;border-top:1px solid #dcfce7;font-size:14px;font-weight:600;color:#111827;">${accountNumber}</td>
+                        <td style="padding:8px 0;border-top:1px solid #fbcfe8;font-size:13px;color:#4b5563;">Account / DuitNow ID</td>
+                        <td style="padding:8px 0;border-top:1px solid #fbcfe8;font-size:14px;font-weight:600;color:#111827;">${accountNumber}</td>
                       </tr>`
                           : ''
                       }
