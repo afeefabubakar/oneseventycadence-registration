@@ -861,6 +861,24 @@ export function CancelEventSidebarAction() {
                       {noticeType === 'postponed' ? 'Request Refund →' : 'Submit Refund Details →'}
                     </span>
                   </div>
+
+                  <p style={{ margin: '20px 0 0 0', fontSize: '13px', color: '#6b7280', lineHeight: 1.6 }}>
+                    If you have any questions or concerns, please reach out to us. We appreciate your kind understanding and support.
+                  </p>
+                </div>
+
+                {/* Email Footer */}
+                <div
+                  style={{
+                    backgroundColor: '#f8fafc',
+                    borderTop: '1px solid #e2e8f0',
+                    padding: '16px 24px',
+                    textAlign: 'center',
+                  }}
+                >
+                  <p style={{ margin: 0, fontSize: '11px', color: '#64748b' }}>
+                    © {new Date().getFullYear()} oneseventycadence. All rights reserved.
+                  </p>
                 </div>
               </div>
             )}
@@ -1565,6 +1583,26 @@ export function CancelEventSidebarAction() {
                         </span>
                       </div>
                     )}
+
+                    <p style={{ margin: '20px 0 0 0', fontSize: '13px', color: '#6b7280', lineHeight: 1.6 }}>
+                      {previewRecipient === 'refunded'
+                        ? 'We hope to see you running with us!'
+                        : 'Thank you so much for your patience, support, and understanding. We look forward to seeing you at the event!'}
+                    </p>
+                  </div>
+
+                  {/* Email Footer */}
+                  <div
+                    style={{
+                      backgroundColor: '#f8fafc',
+                      borderTop: '1px solid #e2e8f0',
+                      padding: '16px 24px',
+                      textAlign: 'center',
+                    }}
+                  >
+                    <p style={{ margin: 0, fontSize: '11px', color: '#64748b' }}>
+                      © {new Date().getFullYear()} oneseventycadence. All rights reserved.
+                    </p>
                   </div>
                 </div>
               </div>
