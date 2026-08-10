@@ -139,13 +139,16 @@ export const Registrations: CollectionConfig = {
           // Auto-purge DuitNow QR screenshot once refund is completed (PDPA Data Minimization & Compliance)
           if (doc.refundQrImage) {
             try {
-              const qrId = typeof doc.refundQrImage === 'object' ? doc.refundQrImage.id : doc.refundQrImage
+              const qrId =
+                typeof doc.refundQrImage === 'object' ? doc.refundQrImage.id : doc.refundQrImage
               if (qrId) {
                 await req.payload.delete({
                   collection: 'refund-qrs',
                   id: String(qrId),
                 })
-                console.log(`[PDPA Auto-Purge] Successfully deleted DuitNow QR image ${qrId} for registration ${doc.id} after refund completion.`)
+                console.log(
+                  `[PDPA Auto-Purge] Successfully deleted DuitNow QR image ${qrId} for registration ${doc.id} after refund completion.`,
+                )
               }
             } catch (purgeErr) {
               console.error('[PDPA Auto-Purge] Error deleting QR image:', purgeErr)
@@ -269,8 +272,7 @@ export const Registrations: CollectionConfig = {
       type: 'textarea',
       label: 'Decline Reason',
       admin: {
-        condition: (data) =>
-          data?.status === 'declined' && data?.declineReason === 'others',
+        condition: (data) => data?.status === 'declined' && data?.declineReason === 'others',
         description:
           'Enter a custom message to include in the decline email sent to the registrant',
       },
@@ -293,7 +295,7 @@ export const Registrations: CollectionConfig = {
       options: [
         { label: 'Not Requested', value: 'not_requested' },
         { label: 'Refund Requested', value: 'requested' },
-        { label: 'Refund Processed', value: 'refunded' },
+        { label: 'Refunded', value: 'refunded' },
       ],
       admin: {
         position: 'sidebar',
@@ -337,7 +339,6 @@ export const Registrations: CollectionConfig = {
       },
     },
 
-
     {
       name: 'refundRequestedAt',
       type: 'date',
@@ -378,4 +379,3 @@ export const Registrations: CollectionConfig = {
     },
   ],
 }
-
