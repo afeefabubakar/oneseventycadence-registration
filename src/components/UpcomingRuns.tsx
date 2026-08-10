@@ -51,11 +51,11 @@ export function UpcomingRuns({ events }: UpcomingRunsProps) {
               }}
             />
 
-            {/* Title on left, Badge on top right */}
-            <div className="flex items-start justify-between gap-4">
+            {/* Title & Badges: Stacked on mobile, side-by-side on desktop */}
+            <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-2 sm:gap-4">
               <p className="font-semibold text-gray-900 leading-snug">{event.name}</p>
 
-              <div className="flex items-center gap-1.5 shrink-0">
+              <div className="flex flex-wrap items-center gap-1.5 shrink-0">
                 {event.amount != null &&
                   event.amount > 0 &&
                   event.registrationStatus !== 'postponed' &&
@@ -64,7 +64,6 @@ export function UpcomingRuns({ events }: UpcomingRunsProps) {
                       RM {event.amount}
                     </span>
                   )}
-
 
                 {/* Badge */}
                 {event.registrationStatus === 'open' && (
@@ -76,9 +75,9 @@ export function UpcomingRuns({ events }: UpcomingRunsProps) {
                   </span>
                 )}
                 {event.registrationStatus === 'not_started' && (
-                  <span className="rounded-full px-2.5 py-0.5 text-xs font-semibold bg-amber-50 text-amber-700">
+                  <span className="rounded-full px-2.5 py-0.5 text-xs font-semibold bg-gray-100 text-gray-500">
                     {event.registrationOpenDate
-                      ? `Register on ${formatMalaysiaDate(event.registrationOpenDate, { month: 'short', day: 'numeric' })}`
+                      ? `Registration Opens ${formatMalaysiaDate(event.registrationOpenDate, { day: 'numeric', month: 'short', year: 'numeric' })}`
                       : 'Registration Opens Soon'}
                   </span>
                 )}
@@ -97,7 +96,6 @@ export function UpcomingRuns({ events }: UpcomingRunsProps) {
                     Registration Closed
                   </span>
                 )}
-
               </div>
             </div>
 
@@ -126,33 +124,21 @@ export function UpcomingRuns({ events }: UpcomingRunsProps) {
               </div>
             </div>
 
-            {/* Registration Window Dates info */}
-            {(event.registrationOpenDate || event.registrationCloseDate) && (
+            {/* Registration Close Date info (if applicable) */}
+            {event.registrationCloseDate && (
               <div className="mt-2 flex flex-wrap items-center gap-x-4 text-xs text-gray-400">
-                {event.registrationOpenDate && (
-                  <span className="flex items-center gap-1">
-                    <Clock className="h-3 w-3 shrink-0" />
-                    Reg Open:{' '}
-                    {formatMalaysiaDate(event.registrationOpenDate, {
-                      day: 'numeric',
-                      month: 'short',
-                    })}
-                    , {formatMalaysiaTime(event.registrationOpenDate)}
-                  </span>
-                )}
-                {event.registrationCloseDate && (
-                  <span className="flex items-center gap-1">
-                    <Clock className="h-3 w-3 shrink-0" />
-                    Reg Close:{' '}
-                    {formatMalaysiaDate(event.registrationCloseDate, {
-                      day: 'numeric',
-                      month: 'short',
-                    })}
-                    , {formatMalaysiaTime(event.registrationCloseDate)}
-                  </span>
-                )}
+                <span className="flex items-center gap-1">
+                  <Clock className="h-3 w-3 shrink-0" />
+                  Reg Close:{' '}
+                  {formatMalaysiaDate(event.registrationCloseDate, {
+                    day: 'numeric',
+                    month: 'short',
+                  })}
+                  , {formatMalaysiaTime(event.registrationCloseDate)}
+                </span>
               </div>
             )}
+
 
             {event.description && (
               <p className="mt-2 text-sm text-gray-400 whitespace-pre-line">{event.description}</p>

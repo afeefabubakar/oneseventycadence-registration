@@ -383,11 +383,12 @@ export function RegistrationForm({ events }: RegistrationFormProps) {
                                 <SelectItemText>{event.name}</SelectItemText>
                                 {event.registrationStatus === 'not_started' && (
                                   <span className="ml-2 text-xs font-semibold text-amber-600">
-                                    · Reg Opens{' '}
+                                    · Registration Opens{' '}
                                     {event.registrationOpenDate
                                       ? formatMalaysiaDate(event.registrationOpenDate, {
-                                          month: 'short',
                                           day: 'numeric',
+                                          month: 'short',
+                                          year: 'numeric',
                                         })
                                       : 'Soon'}
                                   </span>

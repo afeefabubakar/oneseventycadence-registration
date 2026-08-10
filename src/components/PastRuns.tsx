@@ -29,13 +29,11 @@ export function PastRuns({ events }: PastRunsProps) {
 
             <div className="flex items-start justify-between gap-4">
               <div className="w-full">
-                <div className="flex flex-col gap-2 sm:flex-row sm:items-center justify-between">
-                  <div className="flex items-start sm:items-center gap-2">
-                    <p className="font-semibold text-gray-900">{event.name}</p>
-                    <span className="shrink-0 max-sm:mt-1 rounded-full px-2.5 py-0.5 text-xs font-semibold bg-gray-100 text-gray-500">
-                      Closed
-                    </span>
-                  </div>
+                <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-1.5 sm:gap-4">
+                  <p className="font-semibold text-gray-900">{event.name}</p>
+                  <span className="shrink-0 w-fit rounded-full px-2.5 py-0.5 text-xs font-semibold bg-gray-100 text-gray-500">
+                    Closed
+                  </span>
                 </div>
 
                 <div className="mt-2 space-y-1 text-sm text-gray-500">
