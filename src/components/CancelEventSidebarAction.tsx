@@ -14,30 +14,12 @@ import {
   CheckCircle2,
 } from 'lucide-react'
 import { parseSimpleMarkdownToHtml } from '@/lib/emails/utils'
-
-const DEFAULT_POSTPONED_TEMPLATE = `We regret to inform you that our upcoming run has been **postponed** to a later date. We are currently working closely with our collaborators to finalize the new date as soon as possible.
-
-Here is what you need to know:
-- **Your Slot is Secured**: Your registration is **automatically carried over** to the rescheduled event date. No further action is required if you plan to join us!
-- **Full Refund Option**: If you are unable to attend on future date, you can request a full refund by clicking on the button below to fill up the refund request form.
-
-We will send an email update as soon as the new date is officially confirmed. Thank you so much for your patience, love, and understanding!`
-
-const DEFAULT_CANCELLED_TEMPLATE = `We are sad to share that our upcoming run has been **cancelled**. We know how much everyone was looking forward to running together, and we sincerely apologize for any disappointment caused.
-
-Please click the button below to fill up the refund request form so our team can process your full refund immediately.
-
-Thank you so much for your love, support, and understanding! We will be back with another run soon.`
-
-const DEFAULT_REOPENED_TEMPLATE = `Great news! Our postponed event has been **rescheduled** and is officially **reopened**!
-
-We have updated the event details with our new schedule and location. 
-
-Here is what you need to know:
-- **Registration Status**: Your existing registration remains **active and confirmed** for the new event date.
-- **No Action Needed**: You do not need to re-register. We will be waiting for you at the event!
-
-Thank you so much for your patience, support, and understanding. See you at the event!`
+import {
+  DEFAULT_POSTPONED_TEMPLATE,
+  DEFAULT_CANCELLED_TEMPLATE,
+  DEFAULT_REOPENED_TEMPLATE,
+  DEFAULT_REOPEN_INVITE_TEMPLATE,
+} from '@/lib/emails/templates'
 
 export function CancelEventSidebarAction() {
   const { id } = useDocumentInfo()
@@ -808,8 +790,8 @@ export function CancelEventSidebarAction() {
                   </h3>
                   <p style={{ margin: 0, fontSize: '13px', opacity: 0.95 }}>
                     {noticeType === 'postponed'
-                      ? 'Important update regarding event'
-                      : 'Cancellation notice for event'}
+                      ? `Important update regarding ${eventDetails?.name || 'Event'}`
+                      : `Cancellation notice for ${eventDetails?.name || 'Event'}`}
                   </p>
                 </div>
 
@@ -1367,7 +1349,11 @@ export function CancelEventSidebarAction() {
                       style={{ marginBottom: '24px' }}
                       dangerouslySetInnerHTML={{
                         __html: parseSimpleMarkdownToHtml(
-                          reopenMessage.trim() || savedReopenedMsg || DEFAULT_REOPENED_TEMPLATE,
+                          reopenMessage.trim() ||
+                            savedReopenedMsg ||
+                            (previewRecipient === 'refunded'
+                              ? DEFAULT_REOPEN_INVITE_TEMPLATE
+                              : DEFAULT_REOPENED_TEMPLATE),
                           '#E93998',
                         ),
                       }}

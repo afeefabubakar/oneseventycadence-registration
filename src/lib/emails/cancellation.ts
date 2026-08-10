@@ -1,4 +1,5 @@
 import { parseSimpleMarkdownToHtml, getBaseUrl, renderEmailLayout } from './utils'
+import { DEFAULT_POSTPONED_TEMPLATE, DEFAULT_CANCELLED_TEMPLATE } from './templates'
 
 interface CancellationEmailProps {
   name: string
@@ -48,9 +49,8 @@ export function cancellationEmailHtml({
   }
 
   if (!bodyHtml) {
-    bodyHtml = isPostponed
-      ? `<p style="margin: 0 0 16px 0; font-size: 15px; color: #374151; line-height: 1.6;">We regret to inform you that <strong>${eventName}</strong> originally scheduled for <strong>${eventDate}</strong> has been <strong>postponed</strong>. We are working on confirming the new date and will update you shortly.</p><p style="margin: 0 0 16px 0; font-size: 15px; color: #374151; line-height: 1.6;">If you are unable to attend on the rescheduled date, you are eligible for a 100% full refund.</p>`
-      : `<p style="margin: 0 0 16px 0; font-size: 15px; color: #374151; line-height: 1.6;">We deeply regret to inform you that <strong>${eventName}</strong> originally scheduled for <strong>${eventDate}</strong> has been <strong>cancelled</strong>. We sincerely apologize for any inconvenience caused.</p>`
+    const defaultTemplate = isPostponed ? DEFAULT_POSTPONED_TEMPLATE : DEFAULT_CANCELLED_TEMPLATE
+    bodyHtml = parseSimpleMarkdownToHtml(defaultTemplate)
   }
 
   const contentHtml = `

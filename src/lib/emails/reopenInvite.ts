@@ -1,4 +1,5 @@
 import { parseSimpleMarkdownToHtml, getBaseUrl, renderEmailLayout } from './utils'
+import { DEFAULT_REOPEN_INVITE_TEMPLATE } from './templates'
 
 interface ReopenInviteEmailProps {
   name: string
@@ -34,7 +35,7 @@ export function reopenInviteEmailHtml({
   }
 
   if (!bodyHtml) {
-    bodyHtml = `<p style="margin: 0 0 16px 0; font-size: 15px; color: #374151; line-height: 1.6;">Great news! We have officially confirmed the new date and location for <strong>${eventName}</strong>.</p><p style="margin: 0 0 16px 0; font-size: 15px; color: #374151; line-height: 1.6;">Since your previous registration was cancelled or refunded, your slot was released. If you are available on the new date, we would love to have you join us!</p>`
+    bodyHtml = parseSimpleMarkdownToHtml(DEFAULT_REOPEN_INVITE_TEMPLATE, '#E93998')
   }
 
   const contentHtml = `

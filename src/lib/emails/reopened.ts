@@ -1,4 +1,5 @@
 import { parseSimpleMarkdownToHtml, getBaseUrl, renderEmailLayout } from './utils'
+import { DEFAULT_REOPENED_TEMPLATE } from './templates'
 
 interface ReopenEmailProps {
   name: string
@@ -40,7 +41,7 @@ export function reopenedEmailHtml({
   }
 
   if (!bodyHtml) {
-    bodyHtml = `<p style="margin: 0 0 16px 0; font-size: 15px; color: #374151; line-height: 1.6;">We are excited to inform you that <strong>${eventName}</strong> has been rescheduled and is officially reopened!</p><p style="margin: 0 0 16px 0; font-size: 15px; color: #374151; line-height: 1.6;">Your registration remains <strong>active and confirmed</strong> for the new date. Please check the updated event details below.</p>`
+    bodyHtml = parseSimpleMarkdownToHtml(DEFAULT_REOPENED_TEMPLATE, '#E93998')
   }
 
   const contentHtml = `
