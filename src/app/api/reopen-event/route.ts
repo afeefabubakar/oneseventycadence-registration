@@ -135,9 +135,9 @@ export async function POST(request: Request) {
     }
 
     const totalSent = activeEmailsSent + inviteEmailsSent
-    let detailMsg = `${activeEmailsSent} active participant email(s)`
+    let detailMsg = `${activeEmailsSent} non-refunded participant email(s)`
     if (notifyRefunded && inviteEmailsSent > 0) {
-      detailMsg += ` and ${inviteEmailsSent} re-registration invite(s)`
+      detailMsg += ` and ${inviteEmailsSent} refunded participant invite(s)`
     }
 
     return NextResponse.json({

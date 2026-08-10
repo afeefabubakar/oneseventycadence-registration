@@ -1102,7 +1102,7 @@ export function CancelEventSidebarAction() {
             {/* TAB 1: COMPOSE ANNOUNCEMENT */}
             {reopenTab === 'edit' && (
               <div style={{ marginBottom: '20px' }}>
-                {/* Notify Refunded / Cancelled Participants Checkbox */}
+                {/* Notify Refunded Participants Checkbox */}
                 <div
                   style={{
                     marginBottom: '16px',
@@ -1135,16 +1135,16 @@ export function CancelEventSidebarAction() {
                       }}
                     />
                     <span>
-                      Also send re-registration invite email to refunded & cancelled participants
+                      Also send re-registration invite email to refunded participants
                     </span>
                   </label>
                   <p style={{ margin: '4px 0 0 23px', fontSize: '11px', color: '#64748b' }}>
-                    Active participants get a slot confirmation update; refunded participants get a
+                    Non-refunded participants get a slot confirmation update; refunded participants get a
                     re-registration invitation.
                   </p>
                 </div>
 
-                {/* Section 1: Active Participants Message */}
+                {/* Section 1: Non-Refunded Participants Message */}
                 <div style={{ marginBottom: '16px' }}>
                   <div
                     style={{
@@ -1161,7 +1161,7 @@ export function CancelEventSidebarAction() {
                         color: 'var(--theme-elevation-700, #334155)',
                       }}
                     >
-                      Active Participants Message (Sent to participants with secured spots):
+                      Non-Refunded Participants Message (Slot Secured):
                     </label>
                     <button
                       type="button"
@@ -1199,7 +1199,7 @@ export function CancelEventSidebarAction() {
                   />
                 </div>
 
-                {/* Section 2: Refunded / Cancelled Invitation Message (if enabled) */}
+                {/* Section 2: Refunded Invitation Message (if enabled) */}
                 {notifyRefunded && (
                   <div style={{ marginBottom: '16px' }}>
                     <div
@@ -1217,7 +1217,7 @@ export function CancelEventSidebarAction() {
                           color: 'var(--theme-elevation-700, #334155)',
                         }}
                       >
-                        Refunded & Cancelled Participants Invitation Message (Sent as re-registration invite):
+                        Refunded Participants Invitation Message (Re-Registration Invite):
                       </label>
                       <button
                         type="button"
@@ -1327,7 +1327,7 @@ export function CancelEventSidebarAction() {
                             : 'var(--theme-elevation-700, #475569)',
                       }}
                     >
-                      Active Participants (Slot Secured)
+                      Non-Refunded Participants (Slot Secured)
                     </button>
                     <button
                       type="button"
@@ -1350,7 +1350,7 @@ export function CancelEventSidebarAction() {
                             : 'var(--theme-elevation-700, #475569)',
                       }}
                     >
-                      Refunded / Cancelled (Re-Registration Invite)
+                      Refunded Participants (Re-Registration Invite)
                     </button>
                   </div>
                 )}
