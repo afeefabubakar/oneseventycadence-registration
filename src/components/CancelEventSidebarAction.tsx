@@ -1388,7 +1388,7 @@ export function CancelEventSidebarAction() {
                     >
                       oneseventycadence
                     </p>
-                    <h3 style={{ margin: '0 0 4px 0', fontSize: '20px', fontWeight 700 }}>
+                    <h3 style={{ margin: '0 0 4px 0', fontSize: '20px', fontWeight: 700 }}>
                       {previewRecipient === 'refunded'
                         ? "We're Back! Re-register Now 🎉"
                         : 'Event Rescheduled & Reopened 🎉'}
