@@ -202,6 +202,7 @@ export function EventRegistrationsList() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           refundStatus: newStatus,
+          ...(newStatus === 'refunded' ? { status: 'cancelled' } : {}),
           refundedAt: newStatus === 'refunded' ? new Date().toISOString() : null,
         }),
       })
@@ -211,16 +212,24 @@ export function EventRegistrationsList() {
       }
 
       setRegistrations((prev) =>
-        prev.map((reg) => (reg.id === regId ? { ...reg, refundStatus: newStatus as any } : reg)),
+        prev.map((reg) =>
+          reg.id === regId
+            ? {
+                ...reg,
+                refundStatus: newStatus as any,
+                ...(newStatus === 'refunded' ? { status: 'cancelled' } : {}),
+              }
+            : reg,
+        ),
       )
 
       if (newStatus === 'refunded') {
-        toast.success('Marked as Refunded! Confirmation email sent to attendee.')
+        toast.success('Marked as Refunded! Status updated to Cancelled and email sent.')
       } else {
         toast.success('Refund status updated.')
       }
-    } catch (err) {
-      console.error(err)
+    } catch (err: any) {
+      console.error('Error toggling refund status:', err)
       toast.error('Failed to update refund status')
     } finally {
       setActionLoading((prev) => ({ ...prev, [`refund-${regId}`]: false }))

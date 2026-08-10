@@ -34,9 +34,13 @@ export const Registrations: CollectionConfig = {
   },
   hooks: {
     beforeChange: [
-      async ({ data }) => {
+      async ({ data, originalDoc }) => {
         if (!data.refundToken) {
           data.refundToken = crypto.randomUUID()
+        }
+        const currentRefundStatus = data.refundStatus ?? originalDoc?.refundStatus
+        if (currentRefundStatus === 'refunded') {
+          data.status = 'cancelled'
         }
         return data
       },
@@ -78,12 +82,13 @@ export const Registrations: CollectionConfig = {
           }
         }
 
-        // Send rejection email when status changes to 'declined' or 'cancelled'
+        // Send rejection email when status changes to 'declined' or 'cancelled' (unless refunded)
         const isStatusChangedToDeclined =
           operation === 'update' &&
           (doc.status === 'declined' || doc.status === 'cancelled') &&
           previousDoc?.status !== 'declined' &&
-          previousDoc?.status !== 'cancelled'
+          previousDoc?.status !== 'cancelled' &&
+          doc.refundStatus !== 'refunded'
 
         if (isStatusChangedToDeclined && doc.email) {
           try {
