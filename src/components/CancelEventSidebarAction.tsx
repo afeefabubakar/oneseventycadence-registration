@@ -1436,7 +1436,7 @@ export function CancelEventSidebarAction() {
                       }}
                     />
 
-                    {/* Updated Event Card Preview */}
+                    {/* Updated Event Details / Schedule Card Preview */}
                     <div
                       style={{
                         backgroundColor: '#fdf2f8',
@@ -1456,7 +1456,9 @@ export function CancelEventSidebarAction() {
                           color: '#be185d',
                         }}
                       >
-                        🗓️ Updated Event Details
+                        {previewRecipient === 'refunded'
+                          ? '🗓️ Updated Event Schedule'
+                          : '🗓️ Updated Event Details'}
                       </p>
                       <div style={{ marginBottom: '10px' }}>
                         <span
@@ -1486,7 +1488,7 @@ export function CancelEventSidebarAction() {
                           {formattedEventDate}
                         </span>
                       </div>
-                      <div>
+                      <div style={{ marginBottom: eventDetails?.description ? '10px' : '0' }}>
                         <span
                           style={{
                             fontSize: '12px',
@@ -1499,7 +1501,38 @@ export function CancelEventSidebarAction() {
                         <span style={{ color: '#0f172a' }}>
                           {eventDetails?.location || 'Location'}
                         </span>
+                        {eventDetails?.locationLink && (
+                          <div style={{ marginTop: '4px', fontSize: '12px' }}>
+                            <a
+                              href={eventDetails.locationLink}
+                              target="_blank"
+                              rel="noreferrer"
+                              style={{ color: '#E93998', textDecoration: 'underline', fontWeight: 600 }}
+                            >
+                              View Map / Directions →
+                            </a>
+                          </div>
+                        )}
                       </div>
+
+                      {eventDetails?.description && (
+                        <div>
+                          <span
+                            style={{
+                              fontSize: '12px',
+                              color: '#9d174d',
+                              fontWeight: 600,
+                              display: 'block',
+                              marginBottom: '2px',
+                            }}
+                          >
+                            Description / Details:
+                          </span>
+                          <span style={{ fontSize: '13px', color: '#334155', lineHeight: 1.5 }}>
+                            {eventDetails.description}
+                          </span>
+                        </div>
+                      )}
                     </div>
 
                     {previewRecipient === 'refunded' ? (
