@@ -106,6 +106,8 @@ export async function POST(request: Request) {
             email: reg.email,
             event: updatedEvent,
             customMessage: customMessage || null,
+            refundToken: reg.refundToken || null,
+            amount: reg.amount || updatedEvent.amount || null,
           })
           activeEmailsSent++
         } catch (err: any) {

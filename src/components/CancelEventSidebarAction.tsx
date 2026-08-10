@@ -1479,16 +1479,45 @@ export function CancelEventSidebarAction() {
                           backgroundColor: '#f8fafc',
                           border: '1px solid #e2e8f0',
                           borderRadius: '8px',
-                          padding: '14px',
-                          display: 'flex',
-                          alignItems: 'center',
-                          gap: '8px',
-                          color: '#475569',
-                          fontSize: '13px',
+                          padding: '16px',
+                          textAlign: 'center',
                         }}
                       >
-                        <CheckCircle2 size={16} style={{ color: '#E93998', flexShrink: 0 }} />
-                        <span>Your registration spot remains active & valid!</span>
+                        <p
+                          style={{
+                            margin: '0 0 4px 0',
+                            fontSize: '11px',
+                            fontWeight: 700,
+                            letterSpacing: '1px',
+                            textTransform: 'uppercase',
+                            color: '#64748b',
+                          }}
+                        >
+                          Cannot Make It To The New Date?
+                        </p>
+                        <p
+                          style={{
+                            margin: '0 0 10px 0',
+                            fontSize: '13px',
+                            fontWeight: 700,
+                            color: '#0f172a',
+                          }}
+                        >
+                          Full Refund Option Available
+                        </p>
+                        <span
+                          style={{
+                            display: 'inline-block',
+                            background: 'linear-gradient(135deg,#E93998 0%,#ff73b9 100%)',
+                            color: '#ffffff',
+                            fontSize: '13px',
+                            fontWeight: 700,
+                            padding: '8px 16px',
+                            borderRadius: '6px',
+                          }}
+                        >
+                          Request Refund →
+                        </span>
                       </div>
                     )}
                   </div>

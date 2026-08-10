@@ -1,4 +1,4 @@
-import { parseSimpleMarkdownToHtml, renderEmailLayout } from './utils'
+import { parseSimpleMarkdownToHtml, getBaseUrl, renderEmailLayout } from './utils'
 
 interface ReopenEmailProps {
   name: string
@@ -9,6 +9,8 @@ interface ReopenEmailProps {
   eventLocationLink?: string | null
   eventDescription?: string | null
   customMessage?: string | null
+  refundToken?: string | null
+  amount?: number | null
 }
 
 export function reopenedEmailHtml({
@@ -20,8 +22,14 @@ export function reopenedEmailHtml({
   eventLocationLink,
   eventDescription,
   customMessage,
+  refundToken,
+  amount,
 }: ReopenEmailProps): string {
-  const headerTitle = 'Event Reopened 🎉'
+  const baseUrl = getBaseUrl()
+  const refundUrl = refundToken ? `${baseUrl}/refund/${refundToken}` : '#'
+  const formattedAmount = amount && amount > 0 ? `RM ${amount.toFixed(2)}` : null
+
+  const headerTitle = 'Event Rescheduled & Reopened 🎉'
   const headerSubtitle = `Updated event details for ${eventName}`
   const headerGradient = 'linear-gradient(135deg, #E93998 0%, #ff73b9 100%)'
 
@@ -83,11 +91,26 @@ export function reopenedEmailHtml({
       </tr>
     </table>
 
-    <div style="background-color:#f8fafc;border:1px solid #e2e8f0;border-radius:8px;padding:16px;margin-bottom:24px;">
-      <p style="margin:0;font-size:14px;color:#475569;line-height:1.5;">
-        ✅ <strong>Registration Status:</strong> Your spot is secured! No action is needed unless you have further questions for our team.
-      </p>
-    </div>
+    <!-- Refund Call to Action Card -->
+    <table width="100%" cellpadding="0" cellspacing="0" style="background-color:#f8fafc;border:1px solid #e2e8f0;border-radius:12px;margin-bottom:32px;text-align:center;">
+      <tr>
+        <td style="padding:28px 24px;">
+          <p style="margin:0 0 6px 0;font-size:12px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:#64748b;">Cannot Make It To The New Date?</p>
+          <h3 style="margin:0 0 8px 0;font-size:18px;font-weight:800;color:#0f172a;">
+            ${formattedAmount ? `Full Refund (${formattedAmount})` : 'Full Refund Available'}
+          </h3>
+          <p style="margin:0 0 20px 0;font-size:14px;color:#475569;line-height:1.5;max-width:440px;margin-left:auto;margin-right:auto;">
+            If you are unable to attend on the rescheduled date, please click below to submit your bank account or DuitNow QR details for a 100% refund.
+          </p>
+
+          <div>
+            <a href="${refundUrl}" target="_blank" style="display:inline-block;background:linear-gradient(135deg,#E93998 0%,#ff73b9 100%);color:#ffffff;font-size:14px;font-weight:700;text-decoration:none;padding:12px 24px;border-radius:8px;box-shadow:0 4px 14px rgba(233,57,152,0.35);">
+              Request Refund →
+            </a>
+          </div>
+        </td>
+      </tr>
+    </table>
 
     <p style="margin:0;font-size:14px;color:#6b7280;line-height:1.6;">
       Thank you so much for your patience, support, and understanding. We look forward to seeing you at the event!

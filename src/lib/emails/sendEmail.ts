@@ -290,11 +290,15 @@ export async function sendReopenEmailHelper({
   email,
   event,
   customMessage,
+  refundToken,
+  amount,
 }: {
   name: string
   email: string
   event: any
   customMessage?: string | null
+  refundToken?: string | null
+  amount?: number | null
 }) {
   const eventDate = event.date
     ? new Date(event.date).toLocaleDateString('en-MY', {
@@ -319,6 +323,8 @@ export async function sendReopenEmailHelper({
     eventLocationLink: event.locationLink ?? null,
     eventDescription: event.description ?? null,
     customMessage: customMessage ?? null,
+    refundToken: refundToken ?? null,
+    amount: amount ?? event.amount ?? null,
   })
 
   await sendEmailViaBrevo({
