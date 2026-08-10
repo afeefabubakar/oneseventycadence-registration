@@ -2,47 +2,18 @@
 
 import React, { useState, useEffect } from 'react'
 import { useDocumentInfo, toast } from '@payloadcms/ui'
-import { AlertTriangle, Send, X, RefreshCw, AlertCircle, Save } from 'lucide-react'
-
-
-function renderMarkdownPreview(text: string): string {
-  if (!text || !text.trim()) return ''
-
-  let html = text.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
-
-  html = html.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
-  html = html.replace(/\*(.*?)\*/g, '<em>$1</em>')
-  html = html.replace(
-    /\[(.*?)\]\((.*?)\)/g,
-    '<a href="$2" target="_blank" style="color: #E93998; text-decoration: underline;">$1</a>',
-  )
-
-  const blocks = html.split(/\n\s*\n/)
-
-  return blocks
-    .map((block) => {
-      const lines = block.split('\n')
-      const isBulletList =
-        lines.length > 0 &&
-        lines.every((line) => {
-          const trimmed = line.trim()
-          return trimmed.startsWith('* ') || trimmed.startsWith('- ')
-        })
-
-      if (isBulletList) {
-        const items = lines
-          .map((line) => {
-            const content = line.trim().replace(/^[\*\-]\s+/, '')
-            return `<li style="margin: 4px 0;">${content}</li>`
-          })
-          .join('')
-        return `<ul style="margin: 12px 0; padding-left: 20px; font-size: 14px; color: #374151; line-height: 1.6;">${items}</ul>`
-      }
-
-      return `<p style="margin: 0 0 14px 0; font-size: 14px; color: #374151; line-height: 1.6;">${lines.join('<br />')}</p>`
-    })
-    .join('')
-}
+import {
+  AlertTriangle,
+  Send,
+  X,
+  RefreshCw,
+  AlertCircle,
+  Save,
+  RotateCcw,
+  Calendar,
+  CheckCircle2,
+} from 'lucide-react'
+import { parseSimpleMarkdownToHtml } from '@/lib/emails/utils'
 
 const DEFAULT_POSTPONED_TEMPLATE = `We regret to inform you that our upcoming run has been **postponed** to a later date. We are currently working closely with our collaborators to finalize the new date as soon as possible.
 
@@ -58,6 +29,16 @@ Please click the button below to fill up the refund request form so our team can
 
 Thank you so much for your love, support, and understanding! We will be back with another run soon.`
 
+const DEFAULT_REOPENED_TEMPLATE = `Great news! Our postponed event has been **rescheduled** and is officially **reopened**!
+
+We have updated the event details with our new schedule and location. 
+
+Here is what you need to know:
+- **Registration Status**: Your existing registration remains **active and confirmed** for the new event date.
+- **No Action Needed**: You do not need to re-register. We will be waiting for you at the event!
+
+Thank you so much for your patience, support, and understanding. See you at the event!`
+
 export function CancelEventSidebarAction() {
   const { id } = useDocumentInfo()
   const [mounted, setMounted] = useState(false)
@@ -66,9 +47,21 @@ export function CancelEventSidebarAction() {
   const [loading, setLoading] = useState(false)
   const [savingDraft, setSavingDraft] = useState(false)
   const [showModal, setShowModal] = useState(false)
+
+  // Reopen state
+  const [showReopenModal, setShowReopenModal] = useState(false)
+  const [reopening, setReopening] = useState(false)
+  const [savingReopenDraft, setSavingReopenDraft] = useState(false)
+  const [reopenMessage, setReopenMessage] = useState<string>('')
+  const [reopenTab, setReopenTab] = useState<'edit' | 'preview'>('edit')
+  const [savedReopenedMsg, setSavedReopenedMsg] = useState<string | null>(null)
+  const [eventDetails, setEventDetails] = useState<any>(null)
+  const [notifyRefunded, setNotifyRefunded] = useState<boolean>(true)
+  const [previewRecipient, setPreviewRecipient] = useState<'active' | 'refunded'>('active')
+
   const [noticeType, setNoticeType] = useState<'cancelled' | 'postponed'>('cancelled')
 
-  const [customMessage, setCustomMessage] = useState(DEFAULT_CANCELLED_TEMPLATE)
+  const [customMessage, setCustomMessage] = useState<string>('')
   const [activeTab, setActiveTab] = useState<'edit' | 'preview'>('edit')
   const [savedPostponedMsg, setSavedPostponedMsg] = useState<string | null>(null)
   const [savedCancelledMsg, setSavedCancelledMsg] = useState<string | null>(null)
@@ -76,9 +69,9 @@ export function CancelEventSidebarAction() {
   const handleNoticeTypeChange = (type: 'cancelled' | 'postponed') => {
     setNoticeType(type)
     if (type === 'postponed') {
-      setCustomMessage(savedPostponedMsg || DEFAULT_POSTPONED_TEMPLATE)
+      setCustomMessage(savedPostponedMsg || '')
     } else {
-      setCustomMessage(savedCancelledMsg || DEFAULT_CANCELLED_TEMPLATE)
+      setCustomMessage(savedCancelledMsg || '')
     }
   }
 
@@ -117,6 +110,72 @@ export function CancelEventSidebarAction() {
     }
   }
 
+  const handleSaveReopenDraft = async () => {
+    setSavingReopenDraft(true)
+    try {
+      const res = await fetch('/api/reopen-event', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          eventId: id,
+          customMessage: reopenMessage.trim() || undefined,
+          saveOnly: true,
+        }),
+      })
+
+      const data = await res.json()
+
+      if (!res.ok) {
+        throw new Error(data.error || 'Failed to save reopen draft')
+      }
+
+      setSavedReopenedMsg(reopenMessage)
+      toast.success(data.message || 'Reopen template draft saved to event!')
+    } catch (err: any) {
+      console.error('Error saving reopen draft:', err)
+      toast.error(err.message || 'Failed to save draft')
+    } finally {
+      setSavingReopenDraft(false)
+    }
+  }
+
+  const handleReopenEvent = async () => {
+    setReopening(true)
+    try {
+      const activeReopenMsg = reopenMessage.trim() || savedReopenedMsg || undefined
+      const res = await fetch('/api/reopen-event', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          eventId: id,
+          customMessage: activeReopenMsg,
+          notifyRefunded,
+        }),
+      })
+
+      const data = await res.json()
+
+      if (!res.ok) {
+        throw new Error(data.error || 'Failed to reopen event')
+      }
+
+      setIsPostponed(false)
+      setIsCancelled(false)
+      setShowReopenModal(false)
+      toast.success(data.message || 'Event reopened and notification emails sent!')
+
+      // Reload page to reflect active status in Payload CMS form
+      setTimeout(() => {
+        window.location.reload()
+      }, 1200)
+    } catch (err: any) {
+      console.error('Error reopening event:', err)
+      toast.error(err.message || 'Failed to reopen event')
+    } finally {
+      setReopening(false)
+    }
+  }
+
   useEffect(() => {
     setMounted(true)
   }, [])
@@ -131,6 +190,7 @@ export function CancelEventSidebarAction() {
         if (res.ok) {
           const data = await res.json()
           if (active && data) {
+            setEventDetails(data)
             setIsCancelled(Boolean(data.isCancelled))
             setIsPostponed(Boolean(data.isPostponed))
             if (data.noticeMessagePostponed) {
@@ -138,7 +198,24 @@ export function CancelEventSidebarAction() {
             }
             if (data.noticeMessageCancelled) {
               setSavedCancelledMsg(data.noticeMessageCancelled)
-              setCustomMessage(data.noticeMessageCancelled)
+            }
+            if (data.noticeMessageReopened) {
+              setSavedReopenedMsg(data.noticeMessageReopened)
+            }
+
+            // Only prefill textarea if a saved draft exists
+            const initialNoticeMsg =
+              noticeType === 'postponed' ? data.noticeMessagePostponed : data.noticeMessageCancelled
+            if (initialNoticeMsg) {
+              setCustomMessage(initialNoticeMsg)
+            } else {
+              setCustomMessage('')
+            }
+
+            if (data.noticeMessageReopened) {
+              setReopenMessage(data.noticeMessageReopened)
+            } else {
+              setReopenMessage('')
             }
           }
         }
@@ -153,20 +230,22 @@ export function CancelEventSidebarAction() {
     }
   }, [id])
 
-
-
   if (!mounted || !id) return null
 
   const handleCancelEvent = async () => {
     setLoading(true)
     try {
+      const activeMsg =
+        customMessage.trim() ||
+        (noticeType === 'postponed' ? savedPostponedMsg : savedCancelledMsg) ||
+        undefined
       const res = await fetch('/api/cancel-event', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           eventId: id,
           noticeType,
-          customMessage: customMessage.trim() || undefined,
+          customMessage: activeMsg,
         }),
       })
 
@@ -193,7 +272,17 @@ export function CancelEventSidebarAction() {
     }
   }
 
-  const isNoticeActive = isCancelled || isPostponed
+  const formattedEventDate = eventDetails?.date
+    ? new Date(eventDetails.date).toLocaleDateString('en-MY', {
+        weekday: 'long',
+        year: 'numeric',
+        month: 'long',
+        day: 'numeric',
+        hour: '2-digit',
+        minute: '2-digit',
+        timeZone: 'Asia/Kuala_Lumpur',
+      })
+    : 'TBA'
 
   return (
     <div
@@ -217,21 +306,100 @@ export function CancelEventSidebarAction() {
           gap: '6px',
         }}
       >
-        <AlertTriangle size={13} style={{ color: isNoticeActive ? '#eab308' : '#64748b' }} />
+        <AlertTriangle
+          size={13}
+          style={{ color: isPostponed ? '#eab308' : isCancelled ? '#dc2626' : '#64748b' }}
+        />
         Event Status & Notice Broadcast
       </div>
 
-      {isNoticeActive ? (
+      {isPostponed ? (
         <div
           style={{
-            backgroundColor: isPostponed ? 'rgba(234, 179, 8, 0.1)' : 'rgba(220, 38, 38, 0.1)',
-            border: isPostponed ? '1px solid rgba(234, 179, 8, 0.3)' : '1px solid rgba(220, 38, 38, 0.3)',
+            backgroundColor: 'rgba(234, 179, 8, 0.1)',
+            border: '1px solid rgba(234, 179, 8, 0.3)',
             borderRadius: '6px',
             padding: '12px',
           }}
         >
-          <div style={{ fontWeight: 600, fontSize: '13px', color: isPostponed ? '#ca8a04' : '#dc2626', marginBottom: '4px' }}>
-            📢 Event {isPostponed ? 'Postponed' : 'Cancelled'}
+          <div style={{ fontWeight: 600, fontSize: '13px', color: '#ca8a04', marginBottom: '4px' }}>
+            📢 Event Postponed
+          </div>
+          <p
+            style={{
+              fontSize: '12px',
+              color: 'var(--theme-elevation-600, #475569)',
+              margin: '0 0 12px 0',
+            }}
+          >
+            This event is postponed. You can reopen it with updated details & notify participants,
+            or resend notice emails.
+          </p>
+
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+            <button
+              type="button"
+              onClick={() => setShowReopenModal(true)}
+              style={{
+                width: '100%',
+                padding: '8px 12px',
+                borderRadius: '6px',
+                backgroundColor: '#10b981',
+                color: '#ffffff',
+                border: 'none',
+                fontSize: '12px',
+                fontWeight: 600,
+                cursor: 'pointer',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                gap: '6px',
+                boxShadow: '0 2px 4px rgba(16, 185, 129, 0.25)',
+              }}
+            >
+              <RotateCcw size={14} />
+              Reopen Event & Notify Participants
+            </button>
+
+            <button
+              type="button"
+              onClick={() => {
+                setNoticeType('postponed')
+                setCustomMessage(savedPostponedMsg || DEFAULT_POSTPONED_TEMPLATE)
+                setShowModal(true)
+              }}
+              style={{
+                width: '100%',
+                padding: '6px 12px',
+                borderRadius: '4px',
+                border: '1px solid var(--theme-elevation-300, #cbd5e1)',
+                backgroundColor: 'var(--theme-elevation-100, #ffffff)',
+                color: 'var(--theme-elevation-800, #1e293b)',
+                fontSize: '12px',
+                fontWeight: 500,
+                cursor: 'pointer',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                gap: '6px',
+              }}
+            >
+              <Send size={12} />
+              Resend Postponement Notice
+            </button>
+          </div>
+        </div>
+      ) : isCancelled ? (
+        <div
+          style={{
+            backgroundColor: 'rgba(220, 38, 38, 0.1)',
+            border: '1px solid rgba(220, 38, 38, 0.3)',
+            borderRadius: '6px',
+            padding: '12px',
+          }}
+        >
+          <div style={{ fontWeight: 600, fontSize: '13px', color: '#dc2626', marginBottom: '4px' }}>
+            📢 Event Cancelled
           </div>
           <p
             style={{
@@ -244,7 +412,11 @@ export function CancelEventSidebarAction() {
           </p>
           <button
             type="button"
-            onClick={() => setShowModal(true)}
+            onClick={() => {
+              setNoticeType('cancelled')
+              setCustomMessage(savedCancelledMsg || DEFAULT_CANCELLED_TEMPLATE)
+              setShowModal(true)
+            }}
             style={{
               width: '100%',
               padding: '6px 12px',
@@ -262,11 +434,10 @@ export function CancelEventSidebarAction() {
             }}
           >
             <Send size={12} />
-            Resend Notice Emails
+            Resend Cancellation Notice
           </button>
         </div>
       ) : (
-
         <div
           style={{
             backgroundColor: 'rgba(220, 38, 38, 0.05)',
@@ -310,7 +481,7 @@ export function CancelEventSidebarAction() {
         </div>
       )}
 
-      {/* Safety Confirmation & Custom Message Modal */}
+      {/* Safety Confirmation & Custom Message Modal (Cancel / Postpone) */}
       {showModal && (
         <div
           style={{
@@ -504,7 +675,7 @@ export function CancelEventSidebarAction() {
                   </label>
                   <button
                     type="button"
-                    onClick={() => handleNoticeTypeChange(noticeType)}
+                    onClick={() => setCustomMessage('')}
                     style={{
                       fontSize: '11px',
                       fontWeight: 600,
@@ -515,7 +686,7 @@ export function CancelEventSidebarAction() {
                       textDecoration: 'underline',
                     }}
                   >
-                    Reset to Default Template
+                    Clear / Reset Textarea
                   </button>
                 </div>
 
@@ -524,8 +695,8 @@ export function CancelEventSidebarAction() {
                   onChange={(e) => setCustomMessage(e.target.value)}
                   placeholder={
                     noticeType === 'postponed'
-                      ? 'e.g. Due to venue maintenance, our event has been postponed.\n\nKey updates:\n- New date will be announced next week.\n- Tickets remain valid.\n- Full refunds available if you cannot make it.'
-                      : 'e.g. Due to severe weather warnings, we regret to inform you that this event is cancelled.\n\nPlease click below to request your 100% refund.'
+                      ? savedPostponedMsg || DEFAULT_POSTPONED_TEMPLATE
+                      : savedCancelledMsg || DEFAULT_CANCELLED_TEMPLATE
                   }
                   rows={5}
                   style={{
@@ -615,8 +786,6 @@ export function CancelEventSidebarAction() {
                 <div
                   style={{
                     background: 'linear-gradient(135deg, #E93998 0%, #ff73b9 100%)',
-
-
                     padding: '24px',
                     textAlign: 'center',
                     color: '#ffffff',
@@ -653,12 +822,12 @@ export function CancelEventSidebarAction() {
                   <div
                     style={{ marginBottom: '24px' }}
                     dangerouslySetInnerHTML={{
-                      __html:
-                        customMessage && customMessage.trim()
-                          ? renderMarkdownPreview(customMessage)
-                          : noticeType === 'postponed'
-                            ? '<p style="margin:0 0 14px 0; color:#374151; line-height:1.6;">We regret to inform you that this event has been postponed. We are working on confirming the new date and will update you shortly.</p>'
-                            : '<p style="margin:0 0 14px 0; color:#374151; line-height:1.6;">We deeply regret to inform you that this event has been cancelled. We sincerely apologize for any inconvenience caused.</p>',
+                      __html: parseSimpleMarkdownToHtml(
+                        customMessage.trim() ||
+                          (noticeType === 'postponed'
+                            ? savedPostponedMsg || DEFAULT_POSTPONED_TEMPLATE
+                            : savedCancelledMsg || DEFAULT_CANCELLED_TEMPLATE),
+                      ),
                     }}
                   />
 
@@ -750,7 +919,11 @@ export function CancelEventSidebarAction() {
                   gap: '6px',
                 }}
               >
-                {savingDraft ? <RefreshCw size={14} className="animate-spin" /> : <Save size={14} />}
+                {savingDraft ? (
+                  <RefreshCw size={14} className="animate-spin" />
+                ) : (
+                  <Save size={14} />
+                )}
                 {savingDraft ? 'Saving...' : 'Save Draft'}
               </button>
 
@@ -766,7 +939,7 @@ export function CancelEventSidebarAction() {
                   color: '#ffffff',
                   fontSize: '13px',
                   fontWeight: 600,
-                  cursor: (loading || savingDraft) ? 'not-allowed' : 'pointer',
+                  cursor: loading || savingDraft ? 'not-allowed' : 'pointer',
                   display: 'flex',
                   alignItems: 'center',
                   gap: '6px',
@@ -778,7 +951,622 @@ export function CancelEventSidebarAction() {
                   : `Send ${noticeType === 'postponed' ? 'Postponement' : 'Cancellation'} Notice`}
               </button>
             </div>
+          </div>
+        </div>
+      )}
 
+      {/* REOPEN EVENT MODAL */}
+      {showReopenModal && (
+        <div
+          style={{
+            position: 'fixed',
+            top: 0,
+            left: 0,
+            right: 0,
+            bottom: 0,
+            backgroundColor: 'rgba(0, 0, 0, 0.6)',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            zIndex: 99999,
+            padding: '20px',
+          }}
+        >
+          <div
+            style={{
+              backgroundColor: 'var(--theme-elevation-0, #ffffff)',
+              borderRadius: '12px',
+              maxWidth: '540px',
+              width: '100%',
+              padding: '24px',
+              boxShadow: '0 20px 25px -5px rgba(0, 0, 0, 0.3)',
+              border: '1px solid var(--theme-elevation-200, #e2e8f0)',
+              color: 'var(--theme-elevation-800, #0f172a)',
+            }}
+          >
+            <div
+              style={{
+                display: 'flex',
+                justifyContent: 'space-between',
+                alignItems: 'flex-start',
+                marginBottom: '16px',
+              }}
+            >
+              <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                <div
+                  style={{
+                    padding: '8px',
+                    borderRadius: '50%',
+                    backgroundColor: '#d1fae5',
+                    color: '#059669',
+                  }}
+                >
+                  <RotateCcw size={20} />
+                </div>
+                <div>
+                  <h4 style={{ margin: 0, fontSize: '18px', fontWeight: 700 }}>
+                    Reopen Event & Notify Participants 🎉
+                  </h4>
+                  <p style={{ margin: '2px 0 0 0', fontSize: '12px', color: '#64748b' }}>
+                    Reopen registration and broadcast updated details to participants.
+                  </p>
+                </div>
+              </div>
+              <button
+                type="button"
+                onClick={() => setShowReopenModal(false)}
+                disabled={reopening}
+                style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#94a3b8' }}
+              >
+                <X size={20} />
+              </button>
+            </div>
+
+            {/* Target Event Info Box */}
+            <div
+              style={{
+                marginBottom: '16px',
+                padding: '12px 14px',
+                borderRadius: '8px',
+                backgroundColor: '#ecfdf5',
+                border: '1px solid #a7f3d0',
+                fontSize: '12px',
+                color: '#065f46',
+              }}
+            >
+              <div
+                style={{
+                  fontWeight: 700,
+                  marginBottom: '4px',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '6px',
+                }}
+              >
+                <Calendar size={14} />
+                Target Event Details:
+              </div>
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '4px 12px' }}>
+                <div>
+                  <strong>Name:</strong> {eventDetails?.name || 'Current Event'}
+                </div>
+                <div>
+                  <strong>Location:</strong> {eventDetails?.location || 'TBA'}
+                </div>
+                <div style={{ gridColumn: 'span 2' }}>
+                  <strong>Saved Date & Time:</strong> {formattedEventDate}
+                </div>
+              </div>
+              <div
+                style={{
+                  marginTop: '6px',
+                  fontSize: '11px',
+                  color: '#047857',
+                  borderTop: '1px border-dash #a7f3d0',
+                  paddingTop: '4px',
+                }}
+              >
+                💡{' '}
+                <em>Note: Emails will automatically include the newly saved date and location.</em>
+              </div>
+            </div>
+
+            {/* Tab Selector: Edit vs Preview */}
+            <div
+              style={{
+                display: 'flex',
+                borderBottom: '1px solid var(--theme-elevation-200, #cbd5e1)',
+                marginBottom: '16px',
+              }}
+            >
+              <button
+                type="button"
+                onClick={() => setReopenTab('edit')}
+                style={{
+                  padding: '8px 16px',
+                  fontSize: '13px',
+                  fontWeight: 600,
+                  border: 'none',
+                  borderBottom:
+                    reopenTab === 'edit' ? '2px solid #10b981' : '2px solid transparent',
+                  color: reopenTab === 'edit' ? '#10b981' : 'var(--theme-elevation-600, #64748b)',
+                  backgroundColor: 'transparent',
+                  cursor: 'pointer',
+                }}
+              >
+                Compose Announcement
+              </button>
+              <button
+                type="button"
+                onClick={() => setReopenTab('preview')}
+                style={{
+                  padding: '8px 16px',
+                  fontSize: '13px',
+                  fontWeight: 600,
+                  border: 'none',
+                  borderBottom:
+                    reopenTab === 'preview' ? '2px solid #10b981' : '2px solid transparent',
+                  color:
+                    reopenTab === 'preview' ? '#10b981' : 'var(--theme-elevation-600, #64748b)',
+                  backgroundColor: 'transparent',
+                  cursor: 'pointer',
+                }}
+              >
+                Live Email Preview
+              </button>
+            </div>
+
+            {/* TAB 1: COMPOSE ANNOUNCEMENT */}
+            {reopenTab === 'edit' && (
+              <div style={{ marginBottom: '20px' }}>
+                <div
+                  style={{
+                    display: 'flex',
+                    justifyContent: 'space-between',
+                    alignItems: 'center',
+                    marginBottom: '6px',
+                  }}
+                >
+                  <label
+                    style={{
+                      fontSize: '12px',
+                      fontWeight: 600,
+                      color: 'var(--theme-elevation-700, #334155)',
+                    }}
+                  >
+                    Reopening Message:
+                  </label>
+                  <button
+                    type="button"
+                    onClick={() => setReopenMessage('')}
+                    style={{
+                      fontSize: '11px',
+                      fontWeight: 600,
+                      color: '#10b981',
+                      background: 'none',
+                      border: 'none',
+                      cursor: 'pointer',
+                      textDecoration: 'underline',
+                    }}
+                  >
+                    Reset Textarea
+                  </button>
+                </div>
+
+                <textarea
+                  value={reopenMessage}
+                  onChange={(e) => setReopenMessage(e.target.value)}
+                  placeholder={savedReopenedMsg || DEFAULT_REOPENED_TEMPLATE}
+                  rows={6}
+                  style={{
+                    width: '100%',
+                    padding: '10px 12px',
+                    borderRadius: '6px',
+                    border: '1px solid var(--theme-elevation-250, #cbd5e1)',
+                    backgroundColor: 'var(--theme-elevation-0, #ffffff)',
+                    color: 'var(--theme-elevation-900, #0f172a)',
+                    fontSize: '13px',
+                    lineHeight: 1.5,
+                    boxSizing: 'border-box',
+                  }}
+                />
+
+                {/* Formatting Helper Guide Box */}
+                <div
+                  style={{
+                    marginTop: '8px',
+                    padding: '10px 12px',
+                    borderRadius: '6px',
+                    backgroundColor: 'var(--theme-elevation-100, #f8fafc)',
+                    border: '1px solid var(--theme-elevation-200, #e2e8f0)',
+                    fontSize: '11px',
+                    color: 'var(--theme-elevation-700, #334155)',
+                  }}
+                >
+                  <div
+                    style={{
+                      fontWeight: 700,
+                      marginBottom: '6px',
+                      color: 'var(--theme-elevation-900, #0f172a)',
+                    }}
+                  >
+                    Formatting Options Guide:
+                  </div>
+                  <div
+                    style={{
+                      display: 'grid',
+                      gridTemplateColumns: '1fr 1fr',
+                      gap: '4px 12px',
+                      lineHeight: 1.5,
+                    }}
+                  >
+                    <div>
+                      <strong>Bold:</strong> <code>**text**</code>
+                    </div>
+                    <div>
+                      <strong>Italic:</strong> <code>*text*</code>
+                    </div>
+                    <div>
+                      <strong>Bullet List:</strong> <code>- Item 1</code>
+                    </div>
+                    <div>
+                      <strong>Hyperlink:</strong> <code>[Text](url)</code>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Notify Refunded / Cancelled Participants Checkbox */}
+                <div
+                  style={{
+                    marginTop: '12px',
+                    padding: '10px 12px',
+                    borderRadius: '6px',
+                    backgroundColor: 'var(--theme-elevation-100, #f8fafc)',
+                    border: '1px solid var(--theme-elevation-200, #e2e8f0)',
+                  }}
+                >
+                  <label
+                    style={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '8px',
+                      fontSize: '12px',
+                      fontWeight: 600,
+                      color: 'var(--theme-elevation-800, #1e293b)',
+                      cursor: 'pointer',
+                    }}
+                  >
+                    <input
+                      type="checkbox"
+                      checked={notifyRefunded}
+                      onChange={(e) => setNotifyRefunded(e.target.checked)}
+                      style={{
+                        width: '15px',
+                        height: '15px',
+                        accentColor: '#10b981',
+                        cursor: 'pointer',
+                      }}
+                    />
+                    <span>
+                      Also send re-registration invite email to refunded & cancelled participants
+                    </span>
+                  </label>
+                  <p style={{ margin: '4px 0 0 23px', fontSize: '11px', color: '#64748b' }}>
+                    Active participants get a slot confirmation update; refunded participants get a
+                    re-registration invitation.
+                  </p>
+                </div>
+              </div>
+            )}
+
+            {/* TAB 2: LIVE EMAIL PREVIEW */}
+            {reopenTab === 'preview' && (
+              <div>
+                {notifyRefunded && (
+                  <div style={{ display: 'flex', gap: '8px', marginBottom: '12px' }}>
+                    <button
+                      type="button"
+                      onClick={() => setPreviewRecipient('active')}
+                      style={{
+                        padding: '6px 12px',
+                        borderRadius: '6px',
+                        fontSize: '12px',
+                        fontWeight: 600,
+                        cursor: 'pointer',
+                        border:
+                          previewRecipient === 'active'
+                            ? '1.5px solid #10b981'
+                            : '1px solid var(--theme-elevation-300, #cbd5e1)',
+                        backgroundColor: previewRecipient === 'active' ? '#ecfdf5' : 'transparent',
+                        color:
+                          previewRecipient === 'active'
+                            ? '#047857'
+                            : 'var(--theme-elevation-700, #475569)',
+                      }}
+                    >
+                      Active Participants
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setPreviewRecipient('refunded')}
+                      style={{
+                        padding: '6px 12px',
+                        borderRadius: '6px',
+                        fontSize: '12px',
+                        fontWeight: 600,
+                        cursor: 'pointer',
+                        border:
+                          previewRecipient === 'refunded'
+                            ? '1.5px solid #3b82f6'
+                            : '1px solid var(--theme-elevation-300, #cbd5e1)',
+                        backgroundColor:
+                          previewRecipient === 'refunded' ? '#eff6ff' : 'transparent',
+                        color:
+                          previewRecipient === 'refunded'
+                            ? '#1d4ed8'
+                            : 'var(--theme-elevation-700, #475569)',
+                      }}
+                    >
+                      Refunded / Cancelled
+                    </button>
+                  </div>
+                )}
+
+                <div
+                  style={{
+                    marginBottom: '20px',
+                    maxHeight: '340px',
+                    overflowY: 'auto',
+                    border: '1px solid #e2e8f0',
+                    borderRadius: '10px',
+                    backgroundColor: '#ffffff',
+                    color: '#1e293b',
+                    fontSize: '13px',
+                  }}
+                >
+                  {/* Email Header */}
+                  <div
+                    style={{
+                      background: 'linear-gradient(135deg, #E93998 0%, #ff73b9 100%)',
+                      padding: '24px',
+                      textAlign: 'center',
+                      color: '#ffffff',
+                    }}
+                  >
+                    <p
+                      style={{
+                        margin: '0 0 4px 0',
+                        fontSize: '11px',
+                        fontWeight: 600,
+                        letterSpacing: '2px',
+                        textTransform: 'uppercase',
+                        opacity: 0.9,
+                      }}
+                    >
+                      oneseventycadence
+                    </p>
+                    <h3 style={{ margin: '0 0 4px 0', fontSize: '20px', fontWeight: 700 }}>
+                      {previewRecipient === 'refunded'
+                        ? "We're Back! Re-register Now 🎉"
+                        : 'Event Reopened 🎉'}
+                    </h3>
+                    <p style={{ margin: 0, fontSize: '13px', opacity: 0.95 }}>
+                      {previewRecipient === 'refunded'
+                        ? `New date & details announced for ${eventDetails?.name || 'Event'}`
+                        : `Updated event details for ${eventDetails?.name || 'Event'}`}
+                    </p>
+                  </div>
+
+                  {/* Email Body Preview */}
+                  <div style={{ padding: '24px' }}>
+                    <p style={{ margin: '0 0 16px 0', fontSize: '14px', color: '#374151' }}>
+                      Hi <strong>[Participant Name]</strong>,
+                    </p>
+
+                    <div
+                      style={{ marginBottom: '24px' }}
+                      dangerouslySetInnerHTML={{
+                        __html: parseSimpleMarkdownToHtml(
+                          reopenMessage.trim() || savedReopenedMsg || DEFAULT_REOPENED_TEMPLATE,
+                          '#E93998',
+                        ),
+                      }}
+                    />
+
+                    {/* Updated Event Card Preview */}
+                    <div
+                      style={{
+                        backgroundColor: '#fdf2f8',
+                        border: '1px solid #fbcfe8',
+                        borderRadius: '8px',
+                        padding: '20px',
+                        marginBottom: '20px',
+                      }}
+                    >
+                      <p
+                        style={{
+                          margin: '0 0 10px 0',
+                          fontSize: '11px',
+                          fontWeight: 700,
+                          letterSpacing: '1px',
+                          textTransform: 'uppercase',
+                          color: '#be185d',
+                        }}
+                      >
+                        🗓️ Updated Event Details
+                      </p>
+                      <div style={{ marginBottom: '10px' }}>
+                        <span
+                          style={{
+                            fontSize: '12px',
+                            color: '#9d174d',
+                            fontWeight: 600,
+                          }}
+                        >
+                          Event Name:{' '}
+                        </span>
+                        <span style={{ fontWeight: 700, color: '#0f172a' }}>
+                          {eventDetails?.name || 'Event Name'}
+                        </span>
+                      </div>
+                      <div style={{ marginBottom: '10px' }}>
+                        <span
+                          style={{
+                            fontSize: '12px',
+                            color: '#9d174d',
+                            fontWeight: 600,
+                          }}
+                        >
+                          New Date & Time:{' '}
+                        </span>
+                        <span style={{ fontWeight: 600, color: '#0f172a' }}>
+                          {formattedEventDate}
+                        </span>
+                      </div>
+                      <div>
+                        <span
+                          style={{
+                            fontSize: '12px',
+                            color: '#9d174d',
+                            fontWeight: 600,
+                          }}
+                        >
+                          Location:{' '}
+                        </span>
+                        <span style={{ color: '#0f172a' }}>
+                          {eventDetails?.location || 'Location'}
+                        </span>
+                      </div>
+                    </div>
+
+                    {previewRecipient === 'refunded' ? (
+                      <div
+                        style={{
+                          backgroundColor: '#f8fafc',
+                          border: '1px solid #e2e8f0',
+                          borderRadius: '8px',
+                          padding: '16px',
+                          textAlign: 'center',
+                        }}
+                      >
+                        <p
+                          style={{
+                            margin: '0 0 10px 0',
+                            fontSize: '13px',
+                            fontWeight: 600,
+                            color: '#0f172a',
+                          }}
+                        >
+                          Want to join us on the new date?
+                        </p>
+                        <span
+                          style={{
+                            display: 'inline-block',
+                            background: 'linear-gradient(135deg,#E93998 0%,#ff73b9 100%)',
+                            color: '#ffffff',
+                            fontSize: '13px',
+                            fontWeight: 700,
+                            padding: '8px 16px',
+                            borderRadius: '6px',
+                          }}
+                        >
+                          Re-Register for Event →
+                        </span>
+                      </div>
+                    ) : (
+                      <div
+                        style={{
+                          backgroundColor: '#f8fafc',
+                          border: '1px solid #e2e8f0',
+                          borderRadius: '8px',
+                          padding: '14px',
+                          display: 'flex',
+                          alignItems: 'center',
+                          gap: '8px',
+                          color: '#475569',
+                          fontSize: '13px',
+                        }}
+                      >
+                        <CheckCircle2 size={16} style={{ color: '#E93998', flexShrink: 0 }} />
+                        <span>Your registration spot remains active & valid!</span>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              </div>
+            )}
+
+            <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '10px' }}>
+              <button
+                type="button"
+                onClick={() => setShowReopenModal(false)}
+                disabled={reopening || savingReopenDraft}
+                style={{
+                  padding: '8px 16px',
+                  borderRadius: '6px',
+                  border: '1px solid var(--theme-elevation-300, #cbd5e1)',
+                  backgroundColor: 'transparent',
+                  color: 'var(--theme-elevation-800, #334155)',
+                  fontSize: '13px',
+                  fontWeight: 600,
+                  cursor: 'pointer',
+                }}
+              >
+                Close
+              </button>
+
+              <button
+                type="button"
+                onClick={handleSaveReopenDraft}
+                disabled={reopening || savingReopenDraft}
+                style={{
+                  padding: '8px 16px',
+                  borderRadius: '6px',
+                  border: '1px solid var(--theme-elevation-300, #cbd5e1)',
+                  backgroundColor: 'var(--theme-elevation-100, #ffffff)',
+                  color: 'var(--theme-elevation-800, #1e293b)',
+                  fontSize: '13px',
+                  fontWeight: 600,
+                  cursor: savingReopenDraft ? 'not-allowed' : 'pointer',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '6px',
+                }}
+              >
+                {savingReopenDraft ? (
+                  <RefreshCw size={14} className="animate-spin" />
+                ) : (
+                  <Save size={14} />
+                )}
+                {savingReopenDraft ? 'Saving...' : 'Save Draft'}
+              </button>
+
+              <button
+                type="button"
+                onClick={handleReopenEvent}
+                disabled={reopening || savingReopenDraft}
+                style={{
+                  padding: '8px 16px',
+                  borderRadius: '6px',
+                  border: 'none',
+                  backgroundColor: '#10b981',
+                  color: '#ffffff',
+                  fontSize: '13px',
+                  fontWeight: 600,
+                  cursor: reopening || savingReopenDraft ? 'not-allowed' : 'pointer',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '6px',
+                }}
+              >
+                {reopening ? (
+                  <RefreshCw size={14} className="animate-spin" />
+                ) : (
+                  <RotateCcw size={14} />
+                )}
+                {reopening ? 'Reopening & Sending Emails...' : 'Reopen Event & Send Updates'}
+              </button>
+            </div>
           </div>
         </div>
       )}
