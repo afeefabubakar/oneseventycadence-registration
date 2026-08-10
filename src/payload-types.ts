@@ -248,7 +248,7 @@ export interface Registration {
   receipt?: (number | null) | Receipt;
   status: 'confirmed' | 'pending' | 'declined' | 'cancelled';
   /**
-   * Select why this registration was declined
+   * Select why this registration payment was declined
    */
   declineReason?: ('wrong_amount' | 'invalid_receipt' | 'others') | null;
   /**
