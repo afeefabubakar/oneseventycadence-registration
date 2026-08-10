@@ -25,7 +25,6 @@ function hasRichTextContent(content: any): boolean {
 }
 
 export function UpcomingRuns({ events }: UpcomingRunsProps) {
-
   if (events.length === 0) return null
 
   return (
@@ -77,7 +76,7 @@ export function UpcomingRuns({ events }: UpcomingRunsProps) {
                 {event.registrationStatus === 'not_started' && (
                   <span className="rounded-full px-2.5 py-0.5 text-xs font-semibold bg-gray-100 text-gray-500">
                     {event.registrationOpenDate
-                      ? `Registration Opens ${formatMalaysiaDate(event.registrationOpenDate, { day: 'numeric', month: 'short', year: 'numeric' })}`
+                      ? `Registration Date: ${formatMalaysiaDate(event.registrationOpenDate, { day: 'numeric', month: 'short', year: 'numeric' })}`
                       : 'Registration Opens Soon'}
                   </span>
                 )}
@@ -139,7 +138,6 @@ export function UpcomingRuns({ events }: UpcomingRunsProps) {
               </div>
             )}
 
-
             {event.description && (
               <p className="mt-2 text-sm text-gray-400 whitespace-pre-line">{event.description}</p>
             )}
@@ -152,7 +150,6 @@ export function UpcomingRuns({ events }: UpcomingRunsProps) {
                 <RichTextRenderer content={event.direction as any} />
               </div>
             )}
-
 
             {/* Capacity & Progress bar */}
             {event.capacity !== null &&
@@ -174,13 +171,13 @@ export function UpcomingRuns({ events }: UpcomingRunsProps) {
                       className="h-full rounded-full transition-all duration-500"
                       style={{
                         width: `${Math.min(100, (event.registrationCount / event.capacity) * 100)}%`,
-                        backgroundColor: event.registrationStatus === 'open' ? '#E93998' : '#d1d5db',
+                        backgroundColor:
+                          event.registrationStatus === 'open' ? '#E93998' : '#d1d5db',
                       }}
                     />
                   </div>
                 </div>
               )}
-
           </div>
         ))}
       </div>
