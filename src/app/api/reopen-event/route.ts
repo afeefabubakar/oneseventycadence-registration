@@ -9,11 +9,22 @@ export async function POST(request: Request) {
 
     // Parse request body
     const body = await request.json().catch(() => ({}))
-    const { eventId, customMessage, saveOnly, eventData, notifyRefunded = true } = body
+    const {
+      eventId,
+      customMessage,
+      customMessageActive,
+      customMessageInvite,
+      saveOnly,
+      eventData,
+      notifyRefunded = true,
+    } = body
 
     if (!eventId) {
       return NextResponse.json({ error: 'Event ID is required' }, { status: 400 })
     }
+
+    const activeMsg = customMessageActive !== undefined ? customMessageActive : customMessage
+    const inviteMsg = customMessageInvite !== undefined ? customMessageInvite : undefined
 
     // Fetch target event
     const eventObj = await payload.findByID({
@@ -27,8 +38,11 @@ export async function POST(request: Request) {
 
     if (saveOnly) {
       const updateData: any = {}
-      if (customMessage) {
-        updateData.noticeMessageReopened = customMessage
+      if (activeMsg !== undefined) {
+        updateData.noticeMessageReopened = activeMsg
+      }
+      if (inviteMsg !== undefined) {
+        updateData.noticeMessageReopenedInvite = inviteMsg
       }
 
       await payload.update({
@@ -53,8 +67,11 @@ export async function POST(request: Request) {
       ...(eventData || {}),
     }
 
-    if (customMessage) {
-      updateData.noticeMessageReopened = customMessage
+    if (activeMsg !== undefined) {
+      updateData.noticeMessageReopened = activeMsg
+    }
+    if (inviteMsg !== undefined) {
+      updateData.noticeMessageReopenedInvite = inviteMsg
     }
 
     const updatedEvent = await payload.update({
@@ -90,7 +107,7 @@ export async function POST(request: Request) {
               name: reg.name,
               email: reg.email,
               event: updatedEvent,
-              customMessage: customMessage || null,
+              customMessage: inviteMsg || null,
             })
             inviteEmailsSent++
           } catch (err: any) {
@@ -105,7 +122,7 @@ export async function POST(request: Request) {
             name: reg.name,
             email: reg.email,
             event: updatedEvent,
-            customMessage: customMessage || null,
+            customMessage: activeMsg || null,
             refundToken: reg.refundToken || null,
             amount: reg.amount || updatedEvent.amount || null,
           })

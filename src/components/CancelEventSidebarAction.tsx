@@ -34,9 +34,11 @@ export function CancelEventSidebarAction() {
   const [showReopenModal, setShowReopenModal] = useState(false)
   const [reopening, setReopening] = useState(false)
   const [savingReopenDraft, setSavingReopenDraft] = useState(false)
-  const [reopenMessage, setReopenMessage] = useState<string>('')
+  const [reopenMessageActive, setReopenMessageActive] = useState<string>('')
+  const [reopenMessageInvite, setReopenMessageInvite] = useState<string>('')
   const [reopenTab, setReopenTab] = useState<'edit' | 'preview'>('edit')
-  const [savedReopenedMsg, setSavedReopenedMsg] = useState<string | null>(null)
+  const [savedReopenedMsgActive, setSavedReopenedMsgActive] = useState<string | null>(null)
+  const [savedReopenedMsgInvite, setSavedReopenedMsgInvite] = useState<string | null>(null)
   const [eventDetails, setEventDetails] = useState<any>(null)
   const [notifyRefunded, setNotifyRefunded] = useState<boolean>(true)
   const [previewRecipient, setPreviewRecipient] = useState<'active' | 'refunded'>('active')
@@ -100,7 +102,8 @@ export function CancelEventSidebarAction() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           eventId: id,
-          customMessage: reopenMessage.trim() || undefined,
+          customMessageActive: reopenMessageActive.trim() || undefined,
+          customMessageInvite: reopenMessageInvite.trim() || undefined,
           saveOnly: true,
         }),
       })
@@ -111,7 +114,8 @@ export function CancelEventSidebarAction() {
         throw new Error(data.error || 'Failed to save reopen draft')
       }
 
-      setSavedReopenedMsg(reopenMessage)
+      setSavedReopenedMsgActive(reopenMessageActive)
+      setSavedReopenedMsgInvite(reopenMessageInvite)
       toast.success(data.message || 'Reopen template draft saved to event!')
     } catch (err: any) {
       console.error('Error saving reopen draft:', err)
@@ -124,13 +128,15 @@ export function CancelEventSidebarAction() {
   const handleReopenEvent = async () => {
     setReopening(true)
     try {
-      const activeReopenMsg = reopenMessage.trim() || savedReopenedMsg || undefined
+      const activeMsg = reopenMessageActive.trim() || savedReopenedMsgActive || undefined
+      const inviteMsg = reopenMessageInvite.trim() || savedReopenedMsgInvite || undefined
       const res = await fetch('/api/reopen-event', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           eventId: id,
-          customMessage: activeReopenMsg,
+          customMessageActive: activeMsg,
+          customMessageInvite: inviteMsg,
           notifyRefunded,
         }),
       })
@@ -182,22 +188,17 @@ export function CancelEventSidebarAction() {
               setSavedCancelledMsg(data.noticeMessageCancelled)
             }
             if (data.noticeMessageReopened) {
-              setSavedReopenedMsg(data.noticeMessageReopened)
+              setSavedReopenedMsgActive(data.noticeMessageReopened)
+              setReopenMessageActive(data.noticeMessageReopened)
+            } else {
+              setReopenMessageActive('')
             }
 
-            // Only prefill textarea if a saved draft exists
-            const initialNoticeMsg =
-              noticeType === 'postponed' ? data.noticeMessagePostponed : data.noticeMessageCancelled
-            if (initialNoticeMsg) {
-              setCustomMessage(initialNoticeMsg)
+            if (data.noticeMessageReopenedInvite) {
+              setSavedReopenedMsgInvite(data.noticeMessageReopenedInvite)
+              setReopenMessageInvite(data.noticeMessageReopenedInvite)
             } else {
-              setCustomMessage('')
-            }
-
-            if (data.noticeMessageReopened) {
-              setReopenMessage(data.noticeMessageReopened)
-            } else {
-              setReopenMessage('')
+              setReopenMessageInvite('')
             }
           }
         }
@@ -1101,57 +1102,159 @@ export function CancelEventSidebarAction() {
             {/* TAB 1: COMPOSE ANNOUNCEMENT */}
             {reopenTab === 'edit' && (
               <div style={{ marginBottom: '20px' }}>
+                {/* Notify Refunded / Cancelled Participants Checkbox */}
                 <div
                   style={{
-                    display: 'flex',
-                    justifyContent: 'space-between',
-                    alignItems: 'center',
-                    marginBottom: '6px',
+                    marginBottom: '16px',
+                    padding: '10px 12px',
+                    borderRadius: '6px',
+                    backgroundColor: 'var(--theme-elevation-100, #f8fafc)',
+                    border: '1px solid var(--theme-elevation-200, #e2e8f0)',
                   }}
                 >
                   <label
                     style={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '8px',
                       fontSize: '12px',
                       fontWeight: 600,
-                      color: 'var(--theme-elevation-700, #334155)',
-                    }}
-                  >
-                    Reopening Message:
-                  </label>
-                  <button
-                    type="button"
-                    onClick={() => setReopenMessage('')}
-                    style={{
-                      fontSize: '11px',
-                      fontWeight: 600,
-                      color: '#10b981',
-                      background: 'none',
-                      border: 'none',
+                      color: 'var(--theme-elevation-800, #1e293b)',
                       cursor: 'pointer',
-                      textDecoration: 'underline',
                     }}
                   >
-                    Reset Textarea
-                  </button>
+                    <input
+                      type="checkbox"
+                      checked={notifyRefunded}
+                      onChange={(e) => setNotifyRefunded(e.target.checked)}
+                      style={{
+                        width: '15px',
+                        height: '15px',
+                        accentColor: '#E93998',
+                        cursor: 'pointer',
+                      }}
+                    />
+                    <span>
+                      Also send re-registration invite email to refunded & cancelled participants
+                    </span>
+                  </label>
+                  <p style={{ margin: '4px 0 0 23px', fontSize: '11px', color: '#64748b' }}>
+                    Active participants get a slot confirmation update; refunded participants get a
+                    re-registration invitation.
+                  </p>
                 </div>
 
-                <textarea
-                  value={reopenMessage}
-                  onChange={(e) => setReopenMessage(e.target.value)}
-                  placeholder={savedReopenedMsg || DEFAULT_REOPENED_TEMPLATE}
-                  rows={6}
-                  style={{
-                    width: '100%',
-                    padding: '10px 12px',
-                    borderRadius: '6px',
-                    border: '1px solid var(--theme-elevation-250, #cbd5e1)',
-                    backgroundColor: 'var(--theme-elevation-0, #ffffff)',
-                    color: 'var(--theme-elevation-900, #0f172a)',
-                    fontSize: '13px',
-                    lineHeight: 1.5,
-                    boxSizing: 'border-box',
-                  }}
-                />
+                {/* Section 1: Active Participants Message */}
+                <div style={{ marginBottom: '16px' }}>
+                  <div
+                    style={{
+                      display: 'flex',
+                      justifyContent: 'space-between',
+                      alignItems: 'center',
+                      marginBottom: '6px',
+                    }}
+                  >
+                    <label
+                      style={{
+                        fontSize: '12px',
+                        fontWeight: 600,
+                        color: 'var(--theme-elevation-700, #334155)',
+                      }}
+                    >
+                      Active Participants Message (Sent to participants with secured spots):
+                    </label>
+                    <button
+                      type="button"
+                      onClick={() => setReopenMessageActive('')}
+                      style={{
+                        fontSize: '11px',
+                        fontWeight: 600,
+                        color: '#E93998',
+                        background: 'none',
+                        border: 'none',
+                        cursor: 'pointer',
+                        textDecoration: 'underline',
+                      }}
+                    >
+                      Clear / Reset Textarea
+                    </button>
+                  </div>
+
+                  <textarea
+                    value={reopenMessageActive}
+                    onChange={(e) => setReopenMessageActive(e.target.value)}
+                    placeholder={savedReopenedMsgActive || DEFAULT_REOPENED_TEMPLATE}
+                    rows={5}
+                    style={{
+                      width: '100%',
+                      padding: '10px 12px',
+                      borderRadius: '6px',
+                      border: '1px solid var(--theme-elevation-250, #cbd5e1)',
+                      backgroundColor: 'var(--theme-elevation-0, #ffffff)',
+                      color: 'var(--theme-elevation-900, #0f172a)',
+                      fontSize: '13px',
+                      lineHeight: 1.5,
+                      boxSizing: 'border-box',
+                    }}
+                  />
+                </div>
+
+                {/* Section 2: Refunded / Cancelled Invitation Message (if enabled) */}
+                {notifyRefunded && (
+                  <div style={{ marginBottom: '16px' }}>
+                    <div
+                      style={{
+                        display: 'flex',
+                        justifyContent: 'space-between',
+                        alignItems: 'center',
+                        marginBottom: '6px',
+                      }}
+                    >
+                      <label
+                        style={{
+                          fontSize: '12px',
+                          fontWeight: 600,
+                          color: 'var(--theme-elevation-700, #334155)',
+                        }}
+                      >
+                        Refunded & Cancelled Participants Invitation Message (Sent as re-registration invite):
+                      </label>
+                      <button
+                        type="button"
+                        onClick={() => setReopenMessageInvite('')}
+                        style={{
+                          fontSize: '11px',
+                          fontWeight: 600,
+                          color: '#E93998',
+                          background: 'none',
+                          border: 'none',
+                          cursor: 'pointer',
+                          textDecoration: 'underline',
+                        }}
+                      >
+                        Clear / Reset Textarea
+                      </button>
+                    </div>
+
+                    <textarea
+                      value={reopenMessageInvite}
+                      onChange={(e) => setReopenMessageInvite(e.target.value)}
+                      placeholder={savedReopenedMsgInvite || DEFAULT_REOPEN_INVITE_TEMPLATE}
+                      rows={5}
+                      style={{
+                        width: '100%',
+                        padding: '10px 12px',
+                        borderRadius: '6px',
+                        border: '1px solid var(--theme-elevation-250, #cbd5e1)',
+                        backgroundColor: 'var(--theme-elevation-0, #ffffff)',
+                        color: 'var(--theme-elevation-900, #0f172a)',
+                        fontSize: '13px',
+                        lineHeight: 1.5,
+                        boxSizing: 'border-box',
+                      }}
+                    />
+                  </div>
+                )}
 
                 {/* Formatting Helper Guide Box */}
                 <div
@@ -1196,48 +1299,6 @@ export function CancelEventSidebarAction() {
                     </div>
                   </div>
                 </div>
-
-                {/* Notify Refunded / Cancelled Participants Checkbox */}
-                <div
-                  style={{
-                    marginTop: '12px',
-                    padding: '10px 12px',
-                    borderRadius: '6px',
-                    backgroundColor: 'var(--theme-elevation-100, #f8fafc)',
-                    border: '1px solid var(--theme-elevation-200, #e2e8f0)',
-                  }}
-                >
-                  <label
-                    style={{
-                      display: 'flex',
-                      alignItems: 'center',
-                      gap: '8px',
-                      fontSize: '12px',
-                      fontWeight: 600,
-                      color: 'var(--theme-elevation-800, #1e293b)',
-                      cursor: 'pointer',
-                    }}
-                  >
-                    <input
-                      type="checkbox"
-                      checked={notifyRefunded}
-                      onChange={(e) => setNotifyRefunded(e.target.checked)}
-                      style={{
-                        width: '15px',
-                        height: '15px',
-                        accentColor: '#10b981',
-                        cursor: 'pointer',
-                      }}
-                    />
-                    <span>
-                      Also send re-registration invite email to refunded & cancelled participants
-                    </span>
-                  </label>
-                  <p style={{ margin: '4px 0 0 23px', fontSize: '11px', color: '#64748b' }}>
-                    Active participants get a slot confirmation update; refunded participants get a
-                    re-registration invitation.
-                  </p>
-                </div>
               </div>
             )}
 
@@ -1257,16 +1318,16 @@ export function CancelEventSidebarAction() {
                         cursor: 'pointer',
                         border:
                           previewRecipient === 'active'
-                            ? '1.5px solid #10b981'
+                            ? '1.5px solid #E93998'
                             : '1px solid var(--theme-elevation-300, #cbd5e1)',
-                        backgroundColor: previewRecipient === 'active' ? '#ecfdf5' : 'transparent',
+                        backgroundColor: previewRecipient === 'active' ? '#fdf2f8' : 'transparent',
                         color:
                           previewRecipient === 'active'
-                            ? '#047857'
+                            ? '#be185d'
                             : 'var(--theme-elevation-700, #475569)',
                       }}
                     >
-                      Active Participants
+                      Active Participants (Slot Secured)
                     </button>
                     <button
                       type="button"
@@ -1279,17 +1340,17 @@ export function CancelEventSidebarAction() {
                         cursor: 'pointer',
                         border:
                           previewRecipient === 'refunded'
-                            ? '1.5px solid #3b82f6'
+                            ? '1.5px solid #E93998'
                             : '1px solid var(--theme-elevation-300, #cbd5e1)',
                         backgroundColor:
-                          previewRecipient === 'refunded' ? '#eff6ff' : 'transparent',
+                          previewRecipient === 'refunded' ? '#fdf2f8' : 'transparent',
                         color:
                           previewRecipient === 'refunded'
-                            ? '#1d4ed8'
+                            ? '#be185d'
                             : 'var(--theme-elevation-700, #475569)',
                       }}
                     >
-                      Refunded / Cancelled
+                      Refunded / Cancelled (Re-Registration Invite)
                     </button>
                   </div>
                 )}
@@ -1327,10 +1388,10 @@ export function CancelEventSidebarAction() {
                     >
                       oneseventycadence
                     </p>
-                    <h3 style={{ margin: '0 0 4px 0', fontSize: '20px', fontWeight: 700 }}>
+                    <h3 style={{ margin: '0 0 4px 0', fontSize: '20px', fontWeight 700 }}>
                       {previewRecipient === 'refunded'
                         ? "We're Back! Re-register Now 🎉"
-                        : 'Event Reopened 🎉'}
+                        : 'Event Rescheduled & Reopened 🎉'}
                     </h3>
                     <p style={{ margin: 0, fontSize: '13px', opacity: 0.95 }}>
                       {previewRecipient === 'refunded'
@@ -1349,11 +1410,9 @@ export function CancelEventSidebarAction() {
                       style={{ marginBottom: '24px' }}
                       dangerouslySetInnerHTML={{
                         __html: parseSimpleMarkdownToHtml(
-                          reopenMessage.trim() ||
-                            savedReopenedMsg ||
-                            (previewRecipient === 'refunded'
-                              ? DEFAULT_REOPEN_INVITE_TEMPLATE
-                              : DEFAULT_REOPENED_TEMPLATE),
+                          previewRecipient === 'refunded'
+                            ? reopenMessageInvite.trim() || savedReopenedMsgInvite || DEFAULT_REOPEN_INVITE_TEMPLATE
+                            : reopenMessageActive.trim() || savedReopenedMsgActive || DEFAULT_REOPENED_TEMPLATE,
                           '#E93998',
                         ),
                       }}

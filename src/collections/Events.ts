@@ -194,6 +194,13 @@ export const Events: CollectionConfig = {
         hidden: true,
       },
     },
+    {
+      name: 'noticeMessageReopenedInvite',
+      type: 'textarea',
+      admin: {
+        hidden: true,
+      },
+    },
 
 
 
