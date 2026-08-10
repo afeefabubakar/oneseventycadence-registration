@@ -246,7 +246,7 @@ export const Registrations: CollectionConfig = {
       options: [
         { label: 'Confirmed', value: 'confirmed' },
         { label: 'Pending Verification', value: 'pending' },
-        { label: 'Declined', value: 'declined' },
+        { label: 'Payment Declined', value: 'declined' },
         { label: 'Cancelled', value: 'cancelled' },
       ],
     },
@@ -260,8 +260,8 @@ export const Registrations: CollectionConfig = {
         { label: 'Others (Specify reason below)', value: 'others' },
       ],
       admin: {
-        condition: (data) => data?.status === 'declined' || data?.status === 'cancelled',
-        description: 'Select why this registration was declined',
+        condition: (data) => data?.status === 'declined',
+        description: 'Select why this registration payment was declined',
       },
     },
     {
@@ -270,8 +270,7 @@ export const Registrations: CollectionConfig = {
       label: 'Decline Reason',
       admin: {
         condition: (data) =>
-          (data?.status === 'declined' || data?.status === 'cancelled') &&
-          data?.declineReason === 'others',
+          data?.status === 'declined' && data?.declineReason === 'others',
         description:
           'Enter a custom message to include in the decline email sent to the registrant',
       },
