@@ -839,14 +839,31 @@ export function CancelEventSidebarAction() {
                     </p>
                     <h4
                       style={{
-                        margin: '0 0 12px 0',
+                        margin: '0 0 8px 0',
                         fontSize: '18px',
                         fontWeight: 800,
                         color: '#0f172a',
                       }}
                     >
-                      Refund Amount: RM XX.XX
+                      {eventDetails?.amount && eventDetails.amount > 0
+                        ? `Refund Amount: RM ${eventDetails.amount.toFixed(2)}`
+                        : 'Full Refund Available'}
                     </h4>
+                    <p
+                      style={{
+                        margin: '0 0 16px 0',
+                        fontSize: '13px',
+                        color: '#475569',
+                        lineHeight: 1.5,
+                        maxWidth: '440px',
+                        marginLeft: 'auto',
+                        marginRight: 'auto',
+                      }}
+                    >
+                      {noticeType === 'postponed'
+                        ? 'If you cannot make it to the postponed event date, please click below to submit your bank account or DuitNow QR details for a full refund.'
+                        : 'Please click the button below to submit your bank account or DuitNow QR details so our team can process your refund.'}
+                    </p>
                     <span
                       style={{
                         display: 'inline-block',
@@ -856,6 +873,7 @@ export function CancelEventSidebarAction() {
                         fontWeight: 700,
                         padding: '10px 20px',
                         borderRadius: '6px',
+                        boxShadow: '0 4px 14px rgba(233,57,152,0.35)',
                       }}
                     >
                       {noticeType === 'postponed' ? 'Request Refund →' : 'Submit Refund Details →'}
@@ -1541,19 +1559,30 @@ export function CancelEventSidebarAction() {
                           backgroundColor: '#f8fafc',
                           border: '1px solid #e2e8f0',
                           borderRadius: '8px',
-                          padding: '16px',
+                          padding: '20px',
                           textAlign: 'center',
+                          marginBottom: '20px',
                         }}
                       >
-                        <p
+                        <h4
                           style={{
-                            margin: '0 0 10px 0',
-                            fontSize: '13px',
-                            fontWeight: 600,
+                            margin: '0 0 6px 0',
+                            fontSize: '16px',
+                            fontWeight: 800,
                             color: '#0f172a',
                           }}
                         >
                           Want to join us on the new date?
+                        </h4>
+                        <p
+                          style={{
+                            margin: '0 0 16px 0',
+                            fontSize: '13px',
+                            color: '#475569',
+                            lineHeight: 1.5,
+                          }}
+                        >
+                          Registration is officially open! Click below to secure your spot.
                         </p>
                         <span
                           style={{
@@ -1562,8 +1591,9 @@ export function CancelEventSidebarAction() {
                             color: '#ffffff',
                             fontSize: '13px',
                             fontWeight: 700,
-                            padding: '8px 16px',
+                            padding: '10px 20px',
                             borderRadius: '6px',
+                            boxShadow: '0 4px 14px rgba(233,57,152,0.35)',
                           }}
                         >
                           Re-Register for Event →
@@ -1575,8 +1605,9 @@ export function CancelEventSidebarAction() {
                           backgroundColor: '#f8fafc',
                           border: '1px solid #e2e8f0',
                           borderRadius: '8px',
-                          padding: '16px',
+                          padding: '20px',
                           textAlign: 'center',
+                          marginBottom: '20px',
                         }}
                       >
                         <p
@@ -1591,15 +1622,30 @@ export function CancelEventSidebarAction() {
                         >
                           Cannot Make It To The New Date?
                         </p>
-                        <p
+                        <h4
                           style={{
-                            margin: '0 0 10px 0',
-                            fontSize: '13px',
-                            fontWeight: 700,
+                            margin: '0 0 8px 0',
+                            fontSize: '16px',
+                            fontWeight: 800,
                             color: '#0f172a',
                           }}
                         >
-                          Full Refund Option Available
+                          {eventDetails?.amount && eventDetails.amount > 0
+                            ? `Full Refund (RM ${eventDetails.amount.toFixed(2)})`
+                            : 'Full Refund Available'}
+                        </h4>
+                        <p
+                          style={{
+                            margin: '0 0 16px 0',
+                            fontSize: '13px',
+                            color: '#475569',
+                            lineHeight: 1.5,
+                            maxWidth: '440px',
+                            marginLeft: 'auto',
+                            marginRight: 'auto',
+                          }}
+                        >
+                          If you are unable to attend on the rescheduled date, please click below to submit your bank account or DuitNow QR details for a 100% refund.
                         </p>
                         <span
                           style={{
@@ -1608,8 +1654,9 @@ export function CancelEventSidebarAction() {
                             color: '#ffffff',
                             fontSize: '13px',
                             fontWeight: 700,
-                            padding: '8px 16px',
+                            padding: '10px 20px',
                             borderRadius: '6px',
+                            boxShadow: '0 4px 14px rgba(233,57,152,0.35)',
                           }}
                         >
                           Request Refund →
