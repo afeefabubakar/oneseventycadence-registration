@@ -127,12 +127,14 @@ export async function POST(request: Request) {
 
     const reg = registrations.docs[0]
 
-    // Update registration with refund request details
+    // Update registration with refund request details & release spot immediately
     const updated = await payload.update({
       collection: 'registrations',
       id: reg.id,
       data: {
         refundStatus: 'requested',
+        status: 'cancelled',
+        refundRequestedAt: new Date().toISOString(),
         refundBank: duitnowType === 'account' ? bankName : 'DuitNow QR',
         refundAccountName: accountName,
         refundAccountNumber: duitnowType === 'account' ? accountNumber : 'QR Code Uploaded',

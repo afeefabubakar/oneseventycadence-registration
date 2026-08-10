@@ -256,10 +256,6 @@ export interface Registration {
    * Enter a custom message to include in the decline email sent to the registrant
    */
   customDeclineReason?: string | null;
-  /**
-   * Unique secret token generated per registration for refund link
-   */
-  refundToken?: string | null;
   refundStatus?: ('not_requested' | 'requested' | 'refunded') | null;
   /**
    * e.g. Maybank, CIMB, Touch n Go eWallet
@@ -278,6 +274,10 @@ export interface Registration {
    * Internal notes or bank transfer reference number
    */
   refundNotes?: string | null;
+  /**
+   * Unique secret token generated per registration for refund link
+   */
+  refundToken?: string | null;
   attended?: boolean | null;
   updatedAt: string;
   createdAt: string;
@@ -502,7 +502,6 @@ export interface RegistrationsSelect<T extends boolean = true> {
   status?: T;
   declineReason?: T;
   customDeclineReason?: T;
-  refundToken?: T;
   refundStatus?: T;
   refundBank?: T;
   refundAccountName?: T;
@@ -512,6 +511,7 @@ export interface RegistrationsSelect<T extends boolean = true> {
   refundRequestedAt?: T;
   refundedAt?: T;
   refundNotes?: T;
+  refundToken?: T;
   attended?: T;
   updatedAt?: T;
   createdAt?: T;

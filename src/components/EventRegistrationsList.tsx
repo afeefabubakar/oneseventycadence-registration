@@ -48,7 +48,7 @@ export function EventRegistrationsList() {
   const [loading, setLoading] = useState<boolean>(false)
   const [searchQuery, setSearchQuery] = useState<string>('')
   const [attendedFilter, setAttendedFilter] = useState<string>('all')
-  const [refundFilter, setRefundFilter] = useState<string>('all')
+  const [refundFilter, setRefundFilter] = useState<string>('exclude_refunded')
   const [refreshTrigger, setRefreshTrigger] = useState<number>(0)
   const [actionLoading, setActionLoading] = useState<Record<string, boolean>>({})
   const [viewingQrUrl, setViewingQrUrl] = useState<string | null>(null)
@@ -111,6 +111,13 @@ export function EventRegistrationsList() {
 
   const isNoticeActive = isCancelled || isPostponed
 
+  const hasRefunds = useMemo(() => {
+    return (
+      isNoticeActive ||
+      registrations.some((r) => r.refundStatus === 'requested' || r.refundStatus === 'refunded')
+    )
+  }, [isNoticeActive, registrations])
+
   // Filter registrations based on search query and dropdown filters
   const filteredRegistrations = useMemo(() => {
     return registrations.filter((reg) => {
@@ -131,8 +138,8 @@ export function EventRegistrationsList() {
         (attendedFilter === 'not-attended' && !reg.attended)
 
       const matchesRefund =
-        !isNoticeActive ||
         refundFilter === 'all' ||
+        (refundFilter === 'exclude_refunded' && reg.refundStatus !== 'refunded') ||
         (refundFilter === 'requested' && reg.refundStatus === 'requested') ||
         (refundFilter === 'refunded' && reg.refundStatus === 'refunded') ||
         (refundFilter === 'not_requested' &&
@@ -140,18 +147,20 @@ export function EventRegistrationsList() {
 
       return matchesSearch && matchesAttended && matchesRefund
     })
-  }, [registrations, searchQuery, attendedFilter, refundFilter, isNoticeActive])
+  }, [registrations, searchQuery, attendedFilter, refundFilter])
 
-  // Calculate statistics from the full set of registrations
+  // Calculate statistics from registrations
   const stats = useMemo(() => {
-    const total = registrations.length
-    const attended = registrations.filter((r) => r.attended).length
-    const attendedPercentage = total > 0 ? Math.round((attended / total) * 100) : 0
+    const totalAll = registrations.length
+    const activeTotal = registrations.filter((r) => r.refundStatus !== 'refunded').length
+    const attended = registrations.filter((r) => r.attended && r.refundStatus !== 'refunded').length
+    const attendedPercentage = activeTotal > 0 ? Math.round((attended / activeTotal) * 100) : 0
     const refundRequested = registrations.filter((r) => r.refundStatus === 'requested').length
     const refunded = registrations.filter((r) => r.refundStatus === 'refunded').length
 
     return {
-      total,
+      totalAll,
+      activeTotal,
       attended,
       attendedPercentage,
       refundRequested,
@@ -295,7 +304,7 @@ export function EventRegistrationsList() {
               color: 'var(--theme-elevation-800, #0f172a)',
             }}
           >
-            Event Registrations ({registrations.length})
+            Event Registrations ({stats.activeTotal})
           </h3>
         </div>
 
@@ -368,7 +377,7 @@ export function EventRegistrationsList() {
               textTransform: 'uppercase',
             }}
           >
-            Total Registered
+            Active Registered
           </div>
           <div
             style={{
@@ -378,7 +387,7 @@ export function EventRegistrationsList() {
               color: 'var(--theme-elevation-900, #0f172a)',
             }}
           >
-            {stats.total}
+            {stats.activeTotal}
           </div>
         </div>
 
@@ -405,7 +414,7 @@ export function EventRegistrationsList() {
           </div>
         </div>
 
-        {isCancelled ? (
+        {hasRefunds ? (
           <>
             <div
               style={{
@@ -516,8 +525,7 @@ export function EventRegistrationsList() {
           <option value="no">Attended: No</option>
         </select>
 
-        {isNoticeActive && (
-
+        {hasRefunds && (
           <select
             value={refundFilter}
             onChange={(e) => setRefundFilter(e.target.value)}
@@ -531,9 +539,10 @@ export function EventRegistrationsList() {
               cursor: 'pointer',
             }}
           >
-            <option value="all">Refund: All</option>
-            <option value="requested">Refund: Requested</option>
-            <option value="refunded">Refund: Refunded</option>
+            <option value="exclude_refunded">Refund: Exclude Refunded</option>
+            <option value="all">Refund: All (Incl. Refunded)</option>
+            <option value="requested">Refund: Requested Only</option>
+            <option value="refunded">Refund: Refunded Only</option>
             <option value="not_requested">Refund: Not Requested</option>
           </select>
         )}
@@ -607,13 +616,23 @@ export function EventRegistrationsList() {
                       padding: '12px',
                       fontSize: '12px',
                       color: 'var(--theme-elevation-500, #64748b)',
+                      width: '130px',
+                    }}
+                  >
+                    Status
+                  </th>
+                  <th
+                    style={{
+                      textAlign: 'left',
+                      padding: '12px',
+                      fontSize: '12px',
+                      color: 'var(--theme-elevation-500, #64748b)',
                       width: '80px',
                     }}
                   >
                     Amount
                   </th>
-                  {isNoticeActive && (
-
+                  {hasRefunds && (
                     <th
                       style={{
                         textAlign: 'left',
@@ -626,8 +645,7 @@ export function EventRegistrationsList() {
                       Refund Details
                     </th>
                   )}
-                  {isNoticeActive && (
-
+                  {hasRefunds && (
                     <th
                       style={{
                         textAlign: 'center',
@@ -696,12 +714,142 @@ export function EventRegistrationsList() {
                         <br />
                         {reg.phone}
                       </td>
+
+                      {/* Status Column */}
+                      <td style={{ padding: '12px' }}>
+                        {(() => {
+                          if (reg.refundStatus === 'refunded') {
+                            return (
+                              <span
+                                style={{
+                                  display: 'inline-flex',
+                                  alignItems: 'center',
+                                  padding: '3px 8px',
+                                  borderRadius: '12px',
+                                  fontSize: '11px',
+                                  fontWeight: 600,
+                                  backgroundColor: 'rgba(100, 116, 139, 0.15)',
+                                  color: '#475569',
+                                }}
+                              >
+                                Refunded
+                              </span>
+                            )
+                          }
+                          if (reg.refundStatus === 'requested') {
+                            return (
+                              <span
+                                style={{
+                                  display: 'inline-flex',
+                                  alignItems: 'center',
+                                  padding: '3px 8px',
+                                  borderRadius: '12px',
+                                  fontSize: '11px',
+                                  fontWeight: 600,
+                                  backgroundColor: 'rgba(217, 119, 6, 0.15)',
+                                  color: '#b45309',
+                                }}
+                              >
+                                Refund Requested
+                              </span>
+                            )
+                          }
+                          if (reg.status === 'confirmed') {
+                            return (
+                              <span
+                                style={{
+                                  display: 'inline-flex',
+                                  alignItems: 'center',
+                                  padding: '3px 8px',
+                                  borderRadius: '12px',
+                                  fontSize: '11px',
+                                  fontWeight: 600,
+                                  backgroundColor: 'rgba(22, 163, 74, 0.15)',
+                                  color: '#15803d',
+                                }}
+                              >
+                                Confirmed
+                              </span>
+                            )
+                          }
+                          if (reg.status === 'pending') {
+                            return (
+                              <span
+                                style={{
+                                  display: 'inline-flex',
+                                  alignItems: 'center',
+                                  padding: '3px 8px',
+                                  borderRadius: '12px',
+                                  fontSize: '11px',
+                                  fontWeight: 600,
+                                  backgroundColor: 'rgba(234, 179, 8, 0.15)',
+                                  color: '#a16207',
+                                }}
+                              >
+                                Pending
+                              </span>
+                            )
+                          }
+                          if (reg.status === 'declined') {
+                            return (
+                              <span
+                                style={{
+                                  display: 'inline-flex',
+                                  alignItems: 'center',
+                                  padding: '3px 8px',
+                                  borderRadius: '12px',
+                                  fontSize: '11px',
+                                  fontWeight: 600,
+                                  backgroundColor: 'rgba(225, 29, 72, 0.15)',
+                                  color: '#be123c',
+                                }}
+                              >
+                                Declined
+                              </span>
+                            )
+                          }
+                          if (reg.status === 'cancelled') {
+                            return (
+                              <span
+                                style={{
+                                  display: 'inline-flex',
+                                  alignItems: 'center',
+                                  padding: '3px 8px',
+                                  borderRadius: '12px',
+                                  fontSize: '11px',
+                                  fontWeight: 600,
+                                  backgroundColor: 'rgba(100, 116, 139, 0.15)',
+                                  color: '#64748b',
+                                }}
+                              >
+                                Cancelled
+                              </span>
+                            )
+                          }
+                          return (
+                            <span
+                              style={{
+                                display: 'inline-flex',
+                                alignItems: 'center',
+                                padding: '3px 8px',
+                                borderRadius: '12px',
+                                fontSize: '11px',
+                                fontWeight: 600,
+                                backgroundColor: 'rgba(100, 116, 139, 0.15)',
+                                color: '#64748b',
+                              }}
+                            >
+                              {reg.status || '-'}
+                            </span>
+                          )
+                        })()}
+                      </td>
+
                       <td style={{ padding: '12px', fontSize: '14px', fontWeight: 600 }}>
                         {reg.amount ? `RM ${reg.amount}` : '-'}
                       </td>
 
-                      {isNoticeActive && (
-
+                      {hasRefunds && (
                         <td style={{ padding: '12px' }}>
                           <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
                             {/* Bank Transfer Submission */}
@@ -821,8 +969,7 @@ export function EventRegistrationsList() {
                         </td>
                       )}
 
-                      {isNoticeActive && (
-
+                      {hasRefunds && (
                         <td style={{ padding: '12px', textAlign: 'center' }}>
                           <input
                             type="checkbox"
