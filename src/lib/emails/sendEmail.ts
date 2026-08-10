@@ -4,6 +4,8 @@ import { rejectionEmailHtml } from './rejection'
 import { cancellationEmailHtml } from './cancellation'
 import { refundConfirmationEmailHtml } from './refundConfirmation'
 import { refundRequestReceivedEmailHtml } from './refundRequestReceived'
+import { reopenedEmailHtml } from './reopened'
+import { reopenInviteEmailHtml } from './reopenInvite'
 
 
 export async function sendEmailViaBrevo({
@@ -274,6 +276,92 @@ export async function sendRefundRequestReceivedEmailHelper({
     bankName: bankName ?? null,
     accountNumber: accountNumber ?? null,
     duitnowType: duitnowType ?? null,
+  })
+
+  await sendEmailViaBrevo({
+    to: email,
+    subject: emailSubject,
+    html,
+  })
+}
+
+export async function sendReopenEmailHelper({
+  name,
+  email,
+  event,
+  customMessage,
+}: {
+  name: string
+  email: string
+  event: any
+  customMessage?: string | null
+}) {
+  const eventDate = event.date
+    ? new Date(event.date).toLocaleDateString('en-MY', {
+        weekday: 'long',
+        year: 'numeric',
+        month: 'long',
+        day: 'numeric',
+        hour: '2-digit',
+        minute: '2-digit',
+        timeZone: 'Asia/Kuala_Lumpur',
+      })
+    : 'TBA'
+
+  const emailSubject = `[Update] ${event.name} has been Rescheduled & Reopened! 🎉`
+
+  const html = reopenedEmailHtml({
+    name,
+    email,
+    eventName: event.name,
+    eventDate,
+    eventLocation: event.location,
+    eventLocationLink: event.locationLink ?? null,
+    eventDescription: event.description ?? null,
+    customMessage: customMessage ?? null,
+  })
+
+  await sendEmailViaBrevo({
+    to: email,
+    subject: emailSubject,
+    html,
+  })
+}
+
+export async function sendReopenInviteEmailHelper({
+  name,
+  email,
+  event,
+  customMessage,
+}: {
+  name: string
+  email: string
+  event: any
+  customMessage?: string | null
+}) {
+  const eventDate = event.date
+    ? new Date(event.date).toLocaleDateString('en-MY', {
+        weekday: 'long',
+        year: 'numeric',
+        month: 'long',
+        day: 'numeric',
+        hour: '2-digit',
+        minute: '2-digit',
+        timeZone: 'Asia/Kuala_Lumpur',
+      })
+    : 'TBA'
+
+  const emailSubject = `[Invitation] ${event.name} has been Rescheduled! Re-Register Now 🎉`
+
+  const html = reopenInviteEmailHtml({
+    name,
+    email,
+    eventName: event.name,
+    eventDate,
+    eventLocation: event.location,
+    eventLocationLink: event.locationLink ?? null,
+    eventDescription: event.description ?? null,
+    customMessage: customMessage ?? null,
   })
 
   await sendEmailViaBrevo({

@@ -224,6 +224,7 @@ export interface Event {
   isPostponed?: boolean | null;
   noticeMessagePostponed?: string | null;
   noticeMessageCancelled?: string | null;
+  noticeMessageReopened?: string | null;
   updatedAt: string;
   createdAt: string;
 }
@@ -481,6 +482,7 @@ export interface EventsSelect<T extends boolean = true> {
   isPostponed?: T;
   noticeMessagePostponed?: T;
   noticeMessageCancelled?: T;
+  noticeMessageReopened?: T;
   updatedAt?: T;
   createdAt?: T;
 }
