@@ -961,7 +961,7 @@ export function EventRegistrationsList() {
                 color: 'var(--theme-elevation-900, #0f172a)',
               }}
             >
-              Active Registrations ({filteredActiveRegistrations.length})
+              Confirmed Registrations ({filteredActiveRegistrations.length})
             </h4>
           </div>
 
