@@ -4,21 +4,16 @@ import React, { useEffect, useState, useMemo } from 'react'
 import { useDocumentInfo, toast } from '@payloadcms/ui'
 import {
   Search,
-  Mail,
-  Phone,
-  User,
   ExternalLink,
-  Check,
-  X,
   RefreshCw,
   Plus,
   Users,
-  CheckCircle2,
-  XCircle,
   QrCode,
   Copy,
   CheckCheck,
-  DollarSign,
+  X,
+  AlertCircle,
+  CheckCircle2,
 } from 'lucide-react'
 
 interface Registration {
@@ -33,7 +28,10 @@ interface Registration {
   refundAccountName?: string
   refundAccountNumber?: string
   refundQrImage?: any
+  refundDuitnowType?: 'account' | 'qr'
   refundToken?: string
+  refundRequestedAt?: string
+  refundedAt?: string
   attended: boolean
   createdAt: string
 }
@@ -46,13 +44,19 @@ export function EventRegistrationsList() {
 
   const [registrations, setRegistrations] = useState<Registration[]>([])
   const [loading, setLoading] = useState<boolean>(false)
+
+  // Filters for Active Registrations table
   const [searchQuery, setSearchQuery] = useState<string>('')
   const [attendedFilter, setAttendedFilter] = useState<string>('all')
-  const [refundFilter, setRefundFilter] = useState<string>('exclude_refunded')
+  const [statusFilter, setStatusFilter] = useState<string>('all')
+
+  // Filters for Refund Requests table
+  const [refundSearchQuery, setRefundSearchQuery] = useState<string>('')
+  const [refundStatusFilter, setRefundStatusFilter] = useState<string>('all')
+
   const [refreshTrigger, setRefreshTrigger] = useState<number>(0)
   const [actionLoading, setActionLoading] = useState<Record<string, boolean>>({})
   const [viewingQrUrl, setViewingQrUrl] = useState<string | null>(null)
-
   const [copiedId, setCopiedId] = useState<string | null>(null)
 
   useEffect(() => {
@@ -67,7 +71,6 @@ export function EventRegistrationsList() {
     async function fetchData() {
       setLoading(true)
       try {
-        // Fetch event info to check isCancelled & isPostponed
         const eventRes = await fetch(`/api/events/${id}`)
         if (eventRes.ok) {
           const eventData = await eventRes.json()
@@ -77,7 +80,6 @@ export function EventRegistrationsList() {
           }
         }
 
-        // Fetch registrations
         const query = { event: { equals: id } }
         const url = `/api/registrations?where=${encodeURIComponent(
           JSON.stringify(query),
@@ -111,49 +113,15 @@ export function EventRegistrationsList() {
 
   const isNoticeActive = isCancelled || isPostponed
 
-  const hasRefunds = useMemo(() => {
-    return (
-      isNoticeActive ||
-      registrations.some((r) => r.refundStatus === 'requested' || r.refundStatus === 'refunded')
-    )
-  }, [isNoticeActive, registrations])
-
-  // Filter registrations based on search query and dropdown filters
-  const filteredRegistrations = useMemo(() => {
-    return registrations.filter((reg) => {
-      const matchesSearch =
-        !searchQuery ||
-        reg.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        reg.email.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        reg.phone.includes(searchQuery) ||
-        (reg.refundBank && reg.refundBank.toLowerCase().includes(searchQuery.toLowerCase())) ||
-        (reg.refundAccountName &&
-          reg.refundAccountName.toLowerCase().includes(searchQuery.toLowerCase())) ||
-        (reg.refundAccountNumber &&
-          reg.refundAccountNumber.toLowerCase().includes(searchQuery.toLowerCase()))
-
-      const matchesAttended =
-        attendedFilter === 'all' ||
-        (attendedFilter === 'attended' && reg.attended) ||
-        (attendedFilter === 'not-attended' && !reg.attended)
-
-      const matchesRefund =
-        refundFilter === 'all' ||
-        (refundFilter === 'exclude_refunded' && reg.refundStatus !== 'refunded') ||
-        (refundFilter === 'requested' && reg.refundStatus === 'requested') ||
-        (refundFilter === 'refunded' && reg.refundStatus === 'refunded') ||
-        (refundFilter === 'not_requested' &&
-          (reg.refundStatus === 'not_requested' || !reg.refundStatus))
-
-      return matchesSearch && matchesAttended && matchesRefund
-    })
-  }, [registrations, searchQuery, attendedFilter, refundFilter])
-
-  // Calculate statistics from registrations
+  // Calculate overall stats
   const stats = useMemo(() => {
     const totalAll = registrations.length
-    const activeTotal = registrations.filter((r) => r.refundStatus !== 'refunded').length
-    const attended = registrations.filter((r) => r.attended && r.refundStatus !== 'refunded').length
+    const activeTotal = registrations.filter(
+      (r) => r.refundStatus !== 'refunded' && r.status !== 'cancelled',
+    ).length
+    const attended = registrations.filter(
+      (r) => r.attended && r.refundStatus !== 'refunded' && r.status !== 'cancelled',
+    ).length
     const attendedPercentage = activeTotal > 0 ? Math.round((attended / activeTotal) * 100) : 0
     const refundRequested = registrations.filter((r) => r.refundStatus === 'requested').length
     const refunded = registrations.filter((r) => r.refundStatus === 'refunded').length
@@ -168,9 +136,56 @@ export function EventRegistrationsList() {
     }
   }, [registrations])
 
+  // Active Registrations (Excludes refunded & cancelled from default view)
+  const filteredActiveRegistrations = useMemo(() => {
+    return registrations.filter((reg) => {
+      // Exclude refund requested and refunded registrations from active table
+      if (reg.refundStatus === 'requested' || reg.refundStatus === 'refunded') return false
+
+      const matchesSearch =
+        !searchQuery ||
+        reg.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        reg.email.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        reg.phone.includes(searchQuery)
+
+      const matchesAttended =
+        attendedFilter === 'all' ||
+        (attendedFilter === 'attended' && reg.attended) ||
+        (attendedFilter === 'not-attended' && !reg.attended)
+
+      const matchesStatus = statusFilter === 'all' || reg.status === statusFilter
+
+      return matchesSearch && matchesAttended && matchesStatus
+    })
+  }, [registrations, searchQuery, attendedFilter, statusFilter])
+
+  // Refund Requests (Only includes registrations with refundStatus requested or refunded)
+  const filteredRefundRegistrations = useMemo(() => {
+    return registrations.filter((reg) => {
+      const isRefundRecord = reg.refundStatus === 'requested' || reg.refundStatus === 'refunded'
+      if (!isRefundRecord) return false
+
+      const matchesSearch =
+        !refundSearchQuery ||
+        reg.name.toLowerCase().includes(refundSearchQuery.toLowerCase()) ||
+        reg.email.toLowerCase().includes(refundSearchQuery.toLowerCase()) ||
+        reg.phone.includes(refundSearchQuery) ||
+        (reg.refundBank &&
+          reg.refundBank.toLowerCase().includes(refundSearchQuery.toLowerCase())) ||
+        (reg.refundAccountName &&
+          reg.refundAccountName.toLowerCase().includes(refundSearchQuery.toLowerCase())) ||
+        (reg.refundAccountNumber &&
+          reg.refundAccountNumber.toLowerCase().includes(refundSearchQuery.toLowerCase()))
+
+      const matchesRefundStatus =
+        refundStatusFilter === 'all' || reg.refundStatus === refundStatusFilter
+
+      return matchesSearch && matchesRefundStatus
+    })
+  }, [registrations, refundSearchQuery, refundStatusFilter])
+
   // Toggle attended state
   const handleToggleAttended = async (regId: string | number, currentVal: boolean) => {
-
     setActionLoading((prev) => ({ ...prev, [`attended-${regId}`]: true }))
     const newVal = !currentVal
 
@@ -198,7 +213,6 @@ export function EventRegistrationsList() {
     }
   }
 
-
   // Toggle Refunded Status
   const handleToggleRefunded = async (regId: string, currentRefundStatus?: string) => {
     const isRefunded = currentRefundStatus === 'refunded'
@@ -211,7 +225,7 @@ export function EventRegistrationsList() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           refundStatus: newStatus,
-          ...(newStatus === 'refunded' ? { status: 'cancelled' } : {}),
+          status: 'cancelled',
           refundedAt: newStatus === 'refunded' ? new Date().toISOString() : null,
         }),
       })
@@ -226,7 +240,8 @@ export function EventRegistrationsList() {
             ? {
                 ...reg,
                 refundStatus: newStatus as any,
-                ...(newStatus === 'refunded' ? { status: 'cancelled' } : {}),
+                status: 'cancelled',
+                refundedAt: newStatus === 'refunded' ? new Date().toISOString() : undefined,
               }
             : reg,
         ),
@@ -276,6 +291,10 @@ export function EventRegistrationsList() {
     )
   }
 
+  const hasRefunds =
+    isNoticeActive ||
+    registrations.some((r) => r.refundStatus === 'requested' || r.refundStatus === 'refunded')
+
   return (
     <div
       style={{
@@ -285,7 +304,7 @@ export function EventRegistrationsList() {
         fontFamily: 'Inter, system-ui, sans-serif',
       }}
     >
-      {/* Title Header */}
+      {/* Top Header */}
       <div
         style={{
           display: 'flex',
@@ -356,17 +375,17 @@ export function EventRegistrationsList() {
       <div
         style={{
           display: 'grid',
-          gridTemplateColumns: 'repeat(auto-fit, minmax(150px, 1fr))',
+          gridTemplateColumns: 'repeat(auto-fit, minmax(160px, 1fr))',
           gap: '12px',
-          marginBottom: '24px',
+          marginBottom: '28px',
         }}
       >
         <div
           style={{
             backgroundColor: 'var(--theme-elevation-0, #ffffff)',
             border: '1px solid var(--theme-elevation-150, #e2e8f0)',
-            borderRadius: '6px',
-            padding: '12px 16px',
+            borderRadius: '8px',
+            padding: '14px 16px',
           }}
         >
           <div
@@ -377,11 +396,11 @@ export function EventRegistrationsList() {
               textTransform: 'uppercase',
             }}
           >
-            Active Registered
+            Confirmed Registration
           </div>
           <div
             style={{
-              fontSize: '20px',
+              fontSize: '22px',
               fontWeight: 800,
               marginTop: '4px',
               color: 'var(--theme-elevation-900, #0f172a)',
@@ -395,8 +414,8 @@ export function EventRegistrationsList() {
           style={{
             backgroundColor: 'var(--theme-elevation-0, #ffffff)',
             border: '1px solid var(--theme-elevation-150, #e2e8f0)',
-            borderRadius: '6px',
-            padding: '12px 16px',
+            borderRadius: '8px',
+            padding: '14px 16px',
           }}
         >
           <div
@@ -409,25 +428,25 @@ export function EventRegistrationsList() {
           >
             Attended
           </div>
-          <div style={{ fontSize: '20px', fontWeight: 800, marginTop: '4px', color: '#16a34a' }}>
+          <div style={{ fontSize: '22px', fontWeight: 800, marginTop: '4px', color: '#16a34a' }}>
             {stats.attended} ({stats.attendedPercentage}%)
           </div>
         </div>
 
-        {hasRefunds ? (
+        {hasRefunds && (
           <>
             <div
               style={{
                 backgroundColor: 'var(--theme-elevation-0, #ffffff)',
-                border: '1px solid var(--theme-elevation-150, #e2e8f0)',
-                borderRadius: '6px',
-                padding: '12px 16px',
+                border: '1px solid #fde68a',
+                borderRadius: '8px',
+                padding: '14px 16px',
               }}
             >
               <div
                 style={{
                   fontSize: '11px',
-                  color: '#d97706',
+                  color: '#b45309',
                   fontWeight: 600,
                   textTransform: 'uppercase',
                 }}
@@ -435,23 +454,24 @@ export function EventRegistrationsList() {
                 Refund Requested
               </div>
               <div
-                style={{ fontSize: '20px', fontWeight: 800, marginTop: '4px', color: '#d97706' }}
+                style={{ fontSize: '22px', fontWeight: 800, marginTop: '4px', color: '#b45309' }}
               >
                 {stats.refundRequested}
               </div>
             </div>
+
             <div
               style={{
                 backgroundColor: 'var(--theme-elevation-0, #ffffff)',
-                border: '1px solid var(--theme-elevation-150, #e2e8f0)',
-                borderRadius: '6px',
-                padding: '12px 16px',
+                border: '1px solid #bbf7d0',
+                borderRadius: '8px',
+                padding: '14px 16px',
               }}
             >
               <div
                 style={{
                   fontSize: '11px',
-                  color: '#16a34a',
+                  color: '#15803d',
                   fontWeight: 600,
                   textTransform: 'uppercase',
                 }}
@@ -459,267 +479,230 @@ export function EventRegistrationsList() {
                 Refunded
               </div>
               <div
-                style={{ fontSize: '20px', fontWeight: 800, marginTop: '4px', color: '#16a34a' }}
+                style={{ fontSize: '22px', fontWeight: 800, marginTop: '4px', color: '#15803d' }}
               >
                 {stats.refunded}
               </div>
             </div>
           </>
-        ) : null}
-      </div>
-
-      {/* Filters and Search */}
-      <div
-        style={{
-          display: 'flex',
-          gap: '12px',
-          flexWrap: 'wrap',
-          marginBottom: '16px',
-        }}
-      >
-        <div style={{ position: 'relative', flex: '1', minWidth: '200px' }}>
-          <span
-            style={{
-              position: 'absolute',
-              left: '10px',
-              top: '50%',
-              transform: 'translateY(-50%)',
-              color: 'var(--theme-elevation-400, #94a3b8)',
-            }}
-          >
-            <Search size={16} />
-          </span>
-          <input
-            type="text"
-            placeholder="Search by name, email or phone..."
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            style={{
-              width: '100%',
-              padding: '8px 12px 8px 34px',
-              borderRadius: '6px',
-              border: '1px solid var(--theme-elevation-250, #cbd5e1)',
-              backgroundColor: 'var(--theme-elevation-0, #ffffff)',
-              color: 'var(--theme-elevation-800, #0f172a)',
-              fontSize: '13px',
-              boxSizing: 'border-box',
-            }}
-          />
-        </div>
-
-        <select
-          value={attendedFilter}
-          onChange={(e) => setAttendedFilter(e.target.value)}
-          style={{
-            padding: '8px 12px',
-            borderRadius: '6px',
-            border: '1px solid var(--theme-elevation-250, #cbd5e1)',
-            backgroundColor: 'var(--theme-elevation-0, #ffffff)',
-            color: 'var(--theme-elevation-800, #0f172a)',
-            fontSize: '13px',
-            cursor: 'pointer',
-          }}
-        >
-          <option value="all">Attended: All</option>
-          <option value="yes">Attended: Yes</option>
-          <option value="no">Attended: No</option>
-        </select>
-
-        {hasRefunds && (
-          <select
-            value={refundFilter}
-            onChange={(e) => setRefundFilter(e.target.value)}
-            style={{
-              padding: '8px 12px',
-              borderRadius: '6px',
-              border: '1px solid var(--theme-elevation-250, #cbd5e1)',
-              backgroundColor: 'var(--theme-elevation-0, #ffffff)',
-              color: 'var(--theme-elevation-800, #0f172a)',
-              fontSize: '13px',
-              cursor: 'pointer',
-            }}
-          >
-            <option value="exclude_refunded">Refund: Exclude Refunded</option>
-            <option value="all">Refund: All (Incl. Refunded)</option>
-            <option value="requested">Refund: Requested Only</option>
-            <option value="refunded">Refund: Refunded Only</option>
-            <option value="not_requested">Refund: Not Requested</option>
-          </select>
         )}
       </div>
 
-      {/* Registrations Table / List */}
-      <div
-        style={{
-          border: '1px solid var(--theme-elevation-150, #e2e8f0)',
-          borderRadius: '6px',
-          overflow: 'hidden',
-          backgroundColor: 'var(--theme-elevation-0, #ffffff)',
-        }}
-      >
-        {loading ? (
+      {/* ========================================================================= */}
+      {/* SECTION 1: REFUND REQUESTS TABLE (Dedicated table for refund processing)  */}
+      {/* ========================================================================= */}
+      {hasRefunds && (
+        <div style={{ marginBottom: '40px' }}>
           <div
             style={{
-              padding: '40px',
-              textAlign: 'center',
-              color: 'var(--theme-elevation-500, #64748b)',
+              display: 'flex',
+              justifyContent: 'space-between',
+              alignItems: 'center',
+              marginBottom: '14px',
             }}
           >
-            <RefreshCw
-              size={24}
-              className="animate-spin"
-              style={{ margin: '0 auto 8px auto', display: 'block' }}
-            />
-            Loading registrations...
+            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+              <div
+                style={{
+                  height: '14px',
+                  width: '4px',
+                  backgroundColor: '#E93998',
+                  borderRadius: '2px',
+                }}
+              />
+              <h4
+                style={{
+                  margin: 0,
+                  fontSize: '16px',
+                  fontWeight: 700,
+                  color: 'var(--theme-elevation-900, #0f172a)',
+                }}
+              >
+                Refund Requests & Processing ({filteredRefundRegistrations.length})
+              </h4>
+            </div>
+
+            <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap' }}>
+              <div style={{ position: 'relative', width: '220px' }}>
+                <span
+                  style={{
+                    position: 'absolute',
+                    left: '10px',
+                    top: '50%',
+                    transform: 'translateY(-50%)',
+                    color: 'var(--theme-elevation-400, #94a3b8)',
+                  }}
+                >
+                  <Search size={14} />
+                </span>
+                <input
+                  type="text"
+                  placeholder="Search refund records..."
+                  value={refundSearchQuery}
+                  onChange={(e) => setRefundSearchQuery(e.target.value)}
+                  style={{
+                    width: '100%',
+                    padding: '6px 10px 6px 30px',
+                    borderRadius: '6px',
+                    border: '1px solid var(--theme-elevation-250, #cbd5e1)',
+                    backgroundColor: 'var(--theme-elevation-0, #ffffff)',
+                    color: 'var(--theme-elevation-800, #0f172a)',
+                    fontSize: '12px',
+                    boxSizing: 'border-box',
+                  }}
+                />
+              </div>
+
+              <select
+                value={refundStatusFilter}
+                onChange={(e) => setRefundStatusFilter(e.target.value)}
+                style={{
+                  padding: '6px 10px',
+                  borderRadius: '6px',
+                  border: '1px solid var(--theme-elevation-250, #cbd5e1)',
+                  backgroundColor: 'var(--theme-elevation-0, #ffffff)',
+                  color: 'var(--theme-elevation-800, #0f172a)',
+                  fontSize: '12px',
+                  cursor: 'pointer',
+                }}
+              >
+                <option value="all">Status: All Requests</option>
+                <option value="requested">Pending Refund</option>
+                <option value="refunded">Completed Refunded</option>
+              </select>
+            </div>
           </div>
-        ) : filteredRegistrations.length === 0 ? (
+
           <div
             style={{
-              padding: '40px',
-              textAlign: 'center',
-              color: 'var(--theme-elevation-500, #64748b)',
+              border: '1px solid var(--theme-elevation-150, #e2e8f0)',
+              borderRadius: '8px',
+              overflow: 'hidden',
+              backgroundColor: 'var(--theme-elevation-0, #ffffff)',
+              boxShadow: '0 1px 3px rgba(0,0,0,0.04)',
             }}
           >
-            <p style={{ margin: 0 }}>No registrations found.</p>
-          </div>
-        ) : (
-          <div style={{ overflowX: 'auto' }}>
-            <table
-              className="event-registrations-table"
-              style={{ width: '100%', borderCollapse: 'collapse' }}
-            >
-              <thead>
-                <tr>
-                  <th
-                    style={{
-                      textAlign: 'left',
-                      padding: '12px',
-                      fontSize: '12px',
-                      color: 'var(--theme-elevation-500, #64748b)',
-                    }}
-                  >
-                    Name
-                  </th>
-                  <th
-                    style={{
-                      textAlign: 'left',
-                      padding: '12px',
-                      fontSize: '12px',
-                      color: 'var(--theme-elevation-500, #64748b)',
-                    }}
-                  >
-                    Contact
-                  </th>
-                  <th
-                    style={{
-                      textAlign: 'left',
-                      padding: '12px',
-                      fontSize: '12px',
-                      color: 'var(--theme-elevation-500, #64748b)',
-                      width: '130px',
-                    }}
-                  >
-                    Status
-                  </th>
-                  <th
-                    style={{
-                      textAlign: 'left',
-                      padding: '12px',
-                      fontSize: '12px',
-                      color: 'var(--theme-elevation-500, #64748b)',
-                      width: '80px',
-                    }}
-                  >
-                    Amount
-                  </th>
-                  {hasRefunds && (
-                    <th
-                      style={{
-                        textAlign: 'left',
-                        padding: '12px',
-                        fontSize: '12px',
-                        color: 'var(--theme-elevation-500, #64748b)',
-                        width: '220px',
-                      }}
-                    >
-                      Refund Details
-                    </th>
-                  )}
-                  {hasRefunds && (
-                    <th
-                      style={{
-                        textAlign: 'center',
-                        padding: '12px',
-                        fontSize: '12px',
-                        color: 'var(--theme-elevation-500, #64748b)',
-                        width: '80px',
-                      }}
-                    >
-                      Refunded
-                    </th>
-                  )}
-                  <th
-                    style={{
-                      textAlign: 'center',
-                      padding: '12px',
-                      fontSize: '12px',
-                      color: 'var(--theme-elevation-500, #64748b)',
-                      width: '80px',
-                    }}
-                  >
-                    Attended
-                  </th>
-                  <th
-                    style={{
-                      textAlign: 'left',
-                      padding: '12px',
-                      fontSize: '12px',
-                      color: 'var(--theme-elevation-500, #64748b)',
-                      width: '130px',
-                    }}
-                  >
-                    Registered At
-                  </th>
-                  <th
-                    style={{
-                      textAlign: 'right',
-                      padding: '12px',
-                      fontSize: '12px',
-                      color: 'var(--theme-elevation-500, #64748b)',
-                      width: '60px',
-                    }}
-                  >
-                    Actions
-                  </th>
-                </tr>
-              </thead>
-              <tbody>
-                {filteredRegistrations.map((reg) => {
-                  const isAttendedLoading = actionLoading[`attended-${reg.id}`]
-                  const isRefundLoading = actionLoading[`refund-${reg.id}`]
-                  const isRefunded = reg.refundStatus === 'refunded'
-                  const bankInfoString =
-                    reg.refundBank && reg.refundAccountNumber
-                      ? `${reg.refundBank} - ${reg.refundAccountName} (${reg.refundAccountNumber})`
-                      : ''
+            {filteredRefundRegistrations.length === 0 ? (
+              <div
+                style={{
+                  padding: '32px',
+                  textAlign: 'center',
+                  color: 'var(--theme-elevation-500, #64748b)',
+                  fontSize: '13px',
+                }}
+              >
+                No refund requests matching the current filter.
+              </div>
+            ) : (
+              <div style={{ overflowX: 'auto' }}>
+                <table style={{ width: '100%', borderCollapse: 'collapse' }}>
+                  <thead>
+                    <tr style={{ backgroundColor: 'var(--theme-elevation-50, #f8fafc)' }}>
+                      <th
+                        style={{
+                          textAlign: 'left',
+                          padding: '10px 12px',
+                          fontSize: '12px',
+                          color: 'var(--theme-elevation-600, #475569)',
+                          fontWeight: 600,
+                        }}
+                      >
+                        Registrant
+                      </th>
+                      <th
+                        style={{
+                          textAlign: 'left',
+                          padding: '10px 12px',
+                          fontSize: '12px',
+                          color: 'var(--theme-elevation-600, #475569)',
+                          fontWeight: 600,
+                          width: '130px',
+                        }}
+                      >
+                        Status
+                      </th>
+                      <th
+                        style={{
+                          textAlign: 'left',
+                          padding: '10px 12px',
+                          fontSize: '12px',
+                          color: 'var(--theme-elevation-600, #475569)',
+                          fontWeight: 600,
+                        }}
+                      >
+                        Refund Method & Details
+                      </th>
+                      <th
+                        style={{
+                          textAlign: 'left',
+                          padding: '10px 12px',
+                          fontSize: '12px',
+                          color: 'var(--theme-elevation-600, #475569)',
+                          fontWeight: 600,
+                          width: '90px',
+                        }}
+                      >
+                        Amount
+                      </th>
+                      <th
+                        style={{
+                          textAlign: 'center',
+                          padding: '10px 12px',
+                          fontSize: '12px',
+                          color: 'var(--theme-elevation-600, #475569)',
+                          fontWeight: 600,
+                          width: '90px',
+                        }}
+                      >
+                        Refunded
+                      </th>
+                      <th
+                        style={{
+                          textAlign: 'left',
+                          padding: '10px 12px',
+                          fontSize: '12px',
+                          color: 'var(--theme-elevation-600, #475569)',
+                          fontWeight: 600,
+                          width: '120px',
+                        }}
+                      >
+                        Requested At
+                      </th>
+                      <th
+                        style={{
+                          textAlign: 'right',
+                          padding: '10px 12px',
+                          fontSize: '12px',
+                          color: 'var(--theme-elevation-600, #475569)',
+                          fontWeight: 600,
+                          width: '60px',
+                        }}
+                      >
+                        Actions
+                      </th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {filteredRefundRegistrations.map((reg) => {
+                      const isRefundLoading = actionLoading[`refund-${reg.id}`]
+                      const isRefunded = reg.refundStatus === 'refunded'
 
-                  return (
-                    <tr
-                      key={reg.id}
-                      style={{ borderTop: '1px solid var(--theme-elevation-150, #e2e8f0)' }}
-                    >
-                      <td style={{ padding: '12px', fontSize: '14px' }}>{reg.name}</td>
-                      <td style={{ padding: '12px', fontSize: '13px' }}>
-                        {reg.email}
-                        <br />
-                        {reg.phone}
-                      </td>
+                      return (
+                        <tr
+                          key={reg.id}
+                          style={{ borderTop: '1px solid var(--theme-elevation-150, #e2e8f0)' }}
+                        >
+                          {/* Registrant Name & Contact */}
+                          <td style={{ padding: '12px', fontSize: '13px' }}>
+                            <div style={{ fontWeight: 600, color: '#0f172a' }}>{reg.name}</div>
+                            <div style={{ fontSize: '12px', color: '#64748b' }}>
+                              {reg.email} · {reg.phone}
+                            </div>
+                          </td>
 
-                      {/* Status Column */}
-                      <td style={{ padding: '12px' }}>
-                        {(() => {
-                          if (reg.refundStatus === 'refunded') {
-                            return (
+                          {/* Refund Status Badge */}
+                          <td style={{ padding: '12px' }}>
+                            {isRefunded ? (
                               <span
                                 style={{
                                   display: 'inline-flex',
@@ -728,16 +711,13 @@ export function EventRegistrationsList() {
                                   borderRadius: '12px',
                                   fontSize: '11px',
                                   fontWeight: 600,
-                                  backgroundColor: 'rgba(100, 116, 139, 0.15)',
+                                  backgroundColor: '#f1f5f9',
                                   color: '#475569',
                                 }}
                               >
                                 Refunded
                               </span>
-                            )
-                          }
-                          if (reg.refundStatus === 'requested') {
-                            return (
+                            ) : (
                               <span
                                 style={{
                                   display: 'inline-flex',
@@ -746,287 +726,633 @@ export function EventRegistrationsList() {
                                   borderRadius: '12px',
                                   fontSize: '11px',
                                   fontWeight: 600,
-                                  backgroundColor: 'rgba(217, 119, 6, 0.15)',
+                                  backgroundColor: '#fef3c7',
                                   color: '#b45309',
                                 }}
                               >
                                 Refund Requested
                               </span>
-                            )
-                          }
-                          if (reg.status === 'confirmed') {
-                            return (
-                              <span
-                                style={{
-                                  display: 'inline-flex',
-                                  alignItems: 'center',
-                                  padding: '3px 8px',
-                                  borderRadius: '12px',
-                                  fontSize: '11px',
-                                  fontWeight: 600,
-                                  backgroundColor: 'rgba(22, 163, 74, 0.15)',
-                                  color: '#15803d',
-                                }}
-                              >
-                                Confirmed
-                              </span>
-                            )
-                          }
-                          if (reg.status === 'pending') {
-                            return (
-                              <span
-                                style={{
-                                  display: 'inline-flex',
-                                  alignItems: 'center',
-                                  padding: '3px 8px',
-                                  borderRadius: '12px',
-                                  fontSize: '11px',
-                                  fontWeight: 600,
-                                  backgroundColor: 'rgba(234, 179, 8, 0.15)',
-                                  color: '#a16207',
-                                }}
-                              >
-                                Pending
-                              </span>
-                            )
-                          }
-                          if (reg.status === 'declined') {
-                            return (
-                              <span
-                                style={{
-                                  display: 'inline-flex',
-                                  alignItems: 'center',
-                                  padding: '3px 8px',
-                                  borderRadius: '12px',
-                                  fontSize: '11px',
-                                  fontWeight: 600,
-                                  backgroundColor: 'rgba(225, 29, 72, 0.15)',
-                                  color: '#be123c',
-                                }}
-                              >
-                                Declined
-                              </span>
-                            )
-                          }
-                          if (reg.status === 'cancelled') {
-                            return (
-                              <span
-                                style={{
-                                  display: 'inline-flex',
-                                  alignItems: 'center',
-                                  padding: '3px 8px',
-                                  borderRadius: '12px',
-                                  fontSize: '11px',
-                                  fontWeight: 600,
-                                  backgroundColor: 'rgba(100, 116, 139, 0.15)',
-                                  color: '#64748b',
-                                }}
-                              >
-                                Cancelled
-                              </span>
-                            )
-                          }
-                          return (
-                            <span
-                              style={{
-                                display: 'inline-flex',
-                                alignItems: 'center',
-                                padding: '3px 8px',
-                                borderRadius: '12px',
-                                fontSize: '11px',
-                                fontWeight: 600,
-                                backgroundColor: 'rgba(100, 116, 139, 0.15)',
-                                color: '#64748b',
-                              }}
-                            >
-                              {reg.status || '-'}
-                            </span>
-                          )
-                        })()}
-                      </td>
-
-                      <td style={{ padding: '12px', fontSize: '14px', fontWeight: 600 }}>
-                        {reg.amount ? `RM ${reg.amount}` : '-'}
-                      </td>
-
-                      {hasRefunds && (
-                        <td style={{ padding: '12px' }}>
-                          <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
-                            {/* Bank Transfer Submission */}
-                            {!reg.refundQrImage && reg.refundBank && (
-                              <div style={{ display: 'flex', flexDirection: 'column', gap: '3px' }}>
-                                {/* Informational Text Outside */}
-                                <span
-                                  style={{
-                                    fontSize: '11px',
-                                    color: 'var(--theme-elevation-700, #334155)',
-                                    fontWeight: 500,
-                                  }}
-                                >
-                                  <strong>{reg.refundBank}</strong>
-                                  <br />
-                                  {reg.refundAccountName}
-                                </span>
-                                {/* Account Number Copy Button */}
-                                {reg.refundAccountNumber && (
-                                  <button
-                                    type="button"
-                                    title="Click to copy Account Number"
-                                    onClick={() =>
-                                      copyToClipboard(reg.refundAccountNumber || '', reg.id)
-                                    }
-                                    style={{
-                                      fontSize: '11px',
-                                      fontWeight: 600,
-                                      fontFamily: 'monospace',
-                                      color:
-                                        copiedId === reg.id
-                                          ? '#16a34a'
-                                          : 'var(--theme-elevation-900, #0f172a)',
-                                      backgroundColor:
-                                        copiedId === reg.id
-                                          ? 'rgba(22, 163, 74, 0.1)'
-                                          : 'var(--theme-elevation-100, #f1f5f9)',
-                                      border:
-                                        copiedId === reg.id
-                                          ? '1px solid #16a34a'
-                                          : '1px solid var(--theme-elevation-300, #cbd5e1)',
-                                      borderRadius: '4px',
-                                      padding: '2px 8px',
-                                      cursor: 'pointer',
-                                      width: 'fit-content',
-                                      display: 'inline-flex',
-                                      alignItems: 'center',
-                                      gap: '6px',
-                                    }}
-                                  >
-                                    <span>{reg.refundAccountNumber}</span>
-                                    {copiedId === reg.id ? (
-                                      <CheckCheck size={12} style={{ color: '#16a34a' }} />
-                                    ) : (
-                                      <Copy size={12} style={{ color: '#64748b' }} />
-                                    )}
-                                  </button>
-                                )}
-                              </div>
                             )}
+                          </td>
 
-                            {/* DuitNow QR Upload Submission */}
-                            {reg.refundQrImage && (
-                              <div style={{ display: 'flex', flexDirection: 'column', gap: '2px' }}>
-                                {reg.refundAccountName && (
+                          {/* Refund Method & Details */}
+                          <td style={{ padding: '12px' }}>
+                            <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                              {/* Bank Transfer Submission */}
+                              {reg.refundDuitnowType !== 'qr' &&
+                                reg.refundBank !== 'DuitNow QR' &&
+                                reg.refundBank && (
+                                  <div
+                                    style={{ display: 'flex', flexDirection: 'column', gap: '3px' }}
+                                  >
+                                    <span
+                                      style={{
+                                        fontSize: '11px',
+                                        color: 'var(--theme-elevation-700, #334155)',
+                                        fontWeight: 500,
+                                      }}
+                                    >
+                                      <strong>{reg.refundBank}</strong>
+                                      <br />
+                                      {reg.refundAccountName}
+                                    </span>
+                                    {reg.refundAccountNumber && (
+                                      <button
+                                        type="button"
+                                        title="Click to copy Account Number"
+                                        onClick={() =>
+                                          copyToClipboard(reg.refundAccountNumber || '', reg.id)
+                                        }
+                                        style={{
+                                          fontSize: '11px',
+                                          fontWeight: 600,
+                                          fontFamily: 'monospace',
+                                          color:
+                                            copiedId === reg.id
+                                              ? '#16a34a'
+                                              : 'var(--theme-elevation-900, #0f172a)',
+                                          backgroundColor:
+                                            copiedId === reg.id
+                                              ? 'rgba(22, 163, 74, 0.1)'
+                                              : 'var(--theme-elevation-100, #f1f5f9)',
+                                          border:
+                                            copiedId === reg.id
+                                              ? '1px solid #16a34a'
+                                              : '1px solid var(--theme-elevation-300, #cbd5e1)',
+                                          borderRadius: '4px',
+                                          padding: '2px 8px',
+                                          cursor: 'pointer',
+                                          width: 'fit-content',
+                                          display: 'inline-flex',
+                                          alignItems: 'center',
+                                          gap: '6px',
+                                        }}
+                                      >
+                                        <span>{reg.refundAccountNumber}</span>
+                                        {copiedId === reg.id ? (
+                                          <CheckCheck size={12} style={{ color: '#16a34a' }} />
+                                        ) : (
+                                          <Copy size={12} style={{ color: '#64748b' }} />
+                                        )}
+                                      </button>
+                                    )}
+                                  </div>
+                                )}
+
+                              {/* DuitNow QR Upload Submission */}
+                              {(reg.refundDuitnowType === 'qr' ||
+                                reg.refundBank === 'DuitNow QR') && (
+                                <div
+                                  style={{ display: 'flex', flexDirection: 'column', gap: '3px' }}
+                                >
                                   <span
                                     style={{
                                       fontSize: '11px',
-                                      fontWeight: 600,
-                                      color: 'var(--theme-elevation-800, #1e293b)',
+                                      color: 'var(--theme-elevation-700, #334155)',
+                                      fontWeight: 500,
                                     }}
                                   >
-                                    {reg.refundAccountName}
+                                    <strong>DuitNow QR</strong>
+                                    {reg.refundAccountName && (
+                                      <>
+                                        <br />
+                                        {reg.refundAccountName}
+                                      </>
+                                    )}
+                                  </span>
+                                  {reg.refundQrImage ? (
+                                    <button
+                                      type="button"
+                                      onClick={() =>
+                                        setViewingQrUrl(
+                                          typeof reg.refundQrImage === 'object'
+                                            ? reg.refundQrImage.url
+                                            : reg.refundQrImage,
+                                        )
+                                      }
+                                      style={{
+                                        fontSize: '11px',
+                                        fontWeight: 600,
+                                        color: '#E93998',
+                                        border: '1px solid #E93998',
+                                        borderRadius: '4px',
+                                        background: 'rgba(233, 57, 152, 0.08)',
+                                        cursor: 'pointer',
+                                        padding: '3px 8px',
+                                        width: 'fit-content',
+                                        display: 'inline-flex',
+                                        alignItems: 'center',
+                                        gap: '4px',
+                                      }}
+                                    >
+                                      <QrCode size={12} />
+                                      View DuitNow QR
+                                    </button>
+                                  ) : (
+                                    <span
+                                      style={{
+                                        fontSize: '10px',
+                                        color: '#64748b',
+                                        fontStyle: 'italic',
+                                      }}
+                                    >
+                                      QR Code Purged (PDPA)
+                                    </span>
+                                  )}
+                                </div>
+                              )}
+
+                              {!reg.refundBank &&
+                                !reg.refundQrImage &&
+                                reg.refundDuitnowType !== 'qr' && (
+                                  <span
+                                    style={{
+                                      fontSize: '12px',
+                                      color: 'var(--theme-elevation-400, #94a3b8)',
+                                    }}
+                                  >
+                                    -
                                   </span>
                                 )}
-                                <button
-                                  type="button"
-                                  onClick={() =>
-                                    setViewingQrUrl(
-                                      typeof reg.refundQrImage === 'object'
-                                        ? reg.refundQrImage.url
-                                        : reg.refundQrImage,
-                                    )
-                                  }
+                            </div>
+                          </td>
+
+                          {/* Amount */}
+                          <td
+                            style={{
+                              padding: '12px',
+                              fontSize: '14px',
+                              fontWeight: 700,
+                              color: '#0f172a',
+                            }}
+                          >
+                            {reg.amount ? `RM ${reg.amount}` : '-'}
+                          </td>
+
+                          {/* Mark as Refunded Checkbox */}
+                          <td style={{ padding: '12px', textAlign: 'center' }}>
+                            <input
+                              type="checkbox"
+                              checked={isRefunded}
+                              disabled={isRefundLoading}
+                              onChange={() => handleToggleRefunded(reg.id, reg.refundStatus)}
+                              style={{
+                                cursor: 'pointer',
+                                width: '16px',
+                                height: '16px',
+                                accentColor: '#16a34a',
+                              }}
+                            />
+                          </td>
+
+                          {/* Requested At Date */}
+                          <td style={{ padding: '12px', fontSize: '12px', color: '#64748b' }}>
+                            {reg.refundRequestedAt
+                              ? new Date(reg.refundRequestedAt).toLocaleDateString('en-MY')
+                              : new Date(reg.createdAt).toLocaleDateString('en-MY')}
+                          </td>
+
+                          {/* Actions */}
+                          <td style={{ padding: '12px', textAlign: 'right' }}>
+                            <a
+                              href={`/admin/collections/registrations/${reg.id}`}
+                              style={{ color: '#64748b' }}
+                            >
+                              <ExternalLink size={16} />
+                            </a>
+                          </td>
+                        </tr>
+                      )
+                    })}
+                  </tbody>
+                </table>
+              </div>
+            )}
+          </div>
+        </div>
+      )}
+
+      {/* ========================================================================= */}
+      {/* SECTION 2: ACTIVE REGISTRATIONS TABLE (Clean, un-crowded main table)      */}
+      {/* ========================================================================= */}
+      <div>
+        <div
+          style={{
+            display: 'flex',
+            justifyContent: 'space-between',
+            alignItems: 'center',
+            marginBottom: '14px',
+          }}
+        >
+          <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+            <div
+              style={{
+                height: '14px',
+                width: '4px',
+                backgroundColor: '#E93998',
+                borderRadius: '2px',
+              }}
+            />
+            <h4
+              style={{
+                margin: 0,
+                fontSize: '16px',
+                fontWeight: 700,
+                color: 'var(--theme-elevation-900, #0f172a)',
+              }}
+            >
+              Active Registrations ({filteredActiveRegistrations.length})
+            </h4>
+          </div>
+
+          <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap' }}>
+            <div style={{ position: 'relative', width: '220px' }}>
+              <span
+                style={{
+                  position: 'absolute',
+                  left: '10px',
+                  top: '50%',
+                  transform: 'translateY(-50%)',
+                  color: 'var(--theme-elevation-400, #94a3b8)',
+                }}
+              >
+                <Search size={14} />
+              </span>
+              <input
+                type="text"
+                placeholder="Search name, email or phone..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                style={{
+                  width: '100%',
+                  padding: '6px 10px 6px 30px',
+                  borderRadius: '6px',
+                  border: '1px solid var(--theme-elevation-250, #cbd5e1)',
+                  backgroundColor: 'var(--theme-elevation-0, #ffffff)',
+                  color: 'var(--theme-elevation-800, #0f172a)',
+                  fontSize: '12px',
+                  boxSizing: 'border-box',
+                }}
+              />
+            </div>
+
+            <select
+              value={statusFilter}
+              onChange={(e) => setStatusFilter(e.target.value)}
+              style={{
+                padding: '6px 10px',
+                borderRadius: '6px',
+                border: '1px solid var(--theme-elevation-250, #cbd5e1)',
+                backgroundColor: 'var(--theme-elevation-0, #ffffff)',
+                color: 'var(--theme-elevation-800, #0f172a)',
+                fontSize: '12px',
+                cursor: 'pointer',
+              }}
+            >
+              <option value="all">Status: All</option>
+              <option value="confirmed">Confirmed</option>
+              <option value="pending">Pending</option>
+              <option value="declined">Declined</option>
+              <option value="cancelled">Cancelled</option>
+            </select>
+
+            <select
+              value={attendedFilter}
+              onChange={(e) => setAttendedFilter(e.target.value)}
+              style={{
+                padding: '6px 10px',
+                borderRadius: '6px',
+                border: '1px solid var(--theme-elevation-250, #cbd5e1)',
+                backgroundColor: 'var(--theme-elevation-0, #ffffff)',
+                color: 'var(--theme-elevation-800, #0f172a)',
+                fontSize: '12px',
+                cursor: 'pointer',
+              }}
+            >
+              <option value="all">Attended: All</option>
+              <option value="attended">Attended: Yes</option>
+              <option value="not-attended">Attended: No</option>
+            </select>
+          </div>
+        </div>
+
+        <div
+          style={{
+            border: '1px solid var(--theme-elevation-150, #e2e8f0)',
+            borderRadius: '8px',
+            overflow: 'hidden',
+            backgroundColor: 'var(--theme-elevation-0, #ffffff)',
+            boxShadow: '0 1px 3px rgba(0,0,0,0.04)',
+          }}
+        >
+          {loading ? (
+            <div
+              style={{
+                padding: '40px',
+                textAlign: 'center',
+                color: 'var(--theme-elevation-500, #64748b)',
+              }}
+            >
+              <RefreshCw
+                size={24}
+                className="animate-spin"
+                style={{ margin: '0 auto 8px auto', display: 'block' }}
+              />
+              Loading registrations...
+            </div>
+          ) : filteredActiveRegistrations.length === 0 ? (
+            <div
+              style={{
+                padding: '32px',
+                textAlign: 'center',
+                color: 'var(--theme-elevation-500, #64748b)',
+                fontSize: '13px',
+              }}
+            >
+              No active registrations found.
+            </div>
+          ) : (
+            <div style={{ overflowX: 'auto' }}>
+              <table
+                className="event-registrations-table"
+                style={{ width: '100%', borderCollapse: 'collapse' }}
+              >
+                <thead>
+                  <tr style={{ backgroundColor: 'var(--theme-elevation-50, #f8fafc)' }}>
+                    <th
+                      style={{
+                        textAlign: 'left',
+                        padding: '10px 12px',
+                        fontSize: '12px',
+                        color: 'var(--theme-elevation-600, #475569)',
+                        fontWeight: 600,
+                      }}
+                    >
+                      Name
+                    </th>
+                    <th
+                      style={{
+                        textAlign: 'left',
+                        padding: '10px 12px',
+                        fontSize: '12px',
+                        color: 'var(--theme-elevation-600, #475569)',
+                        fontWeight: 600,
+                      }}
+                    >
+                      Contact
+                    </th>
+                    <th
+                      style={{
+                        textAlign: 'left',
+                        padding: '10px 12px',
+                        fontSize: '12px',
+                        color: 'var(--theme-elevation-600, #475569)',
+                        fontWeight: 600,
+                        width: '130px',
+                      }}
+                    >
+                      Status
+                    </th>
+                    <th
+                      style={{
+                        textAlign: 'left',
+                        padding: '10px 12px',
+                        fontSize: '12px',
+                        color: 'var(--theme-elevation-600, #475569)',
+                        fontWeight: 600,
+                        width: '90px',
+                      }}
+                    >
+                      Amount
+                    </th>
+                    <th
+                      style={{
+                        textAlign: 'center',
+                        padding: '10px 12px',
+                        fontSize: '12px',
+                        color: 'var(--theme-elevation-600, #475569)',
+                        fontWeight: 600,
+                        width: '80px',
+                      }}
+                    >
+                      Attended
+                    </th>
+                    <th
+                      style={{
+                        textAlign: 'left',
+                        padding: '10px 12px',
+                        fontSize: '12px',
+                        color: 'var(--theme-elevation-600, #475569)',
+                        fontWeight: 600,
+                        width: '120px',
+                      }}
+                    >
+                      Registered At
+                    </th>
+                    <th
+                      style={{
+                        textAlign: 'right',
+                        padding: '10px 12px',
+                        fontSize: '12px',
+                        color: 'var(--theme-elevation-600, #475569)',
+                        fontWeight: 600,
+                        width: '60px',
+                      }}
+                    >
+                      Actions
+                    </th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {filteredActiveRegistrations.map((reg) => {
+                    const isAttendedLoading = actionLoading[`attended-${reg.id}`]
+
+                    return (
+                      <tr
+                        key={reg.id}
+                        style={{ borderTop: '1px solid var(--theme-elevation-150, #e2e8f0)' }}
+                      >
+                        <td
+                          style={{
+                            padding: '12px',
+                            fontSize: '14px',
+                            fontWeight: 600,
+                            color: '#0f172a',
+                          }}
+                        >
+                          {reg.name}
+                        </td>
+                        <td style={{ padding: '12px', fontSize: '13px' }}>
+                          {reg.email}
+                          <br />
+                          <span style={{ fontSize: '12px', color: '#64748b' }}>{reg.phone}</span>
+                        </td>
+
+                        {/* Status Column */}
+                        <td style={{ padding: '12px' }}>
+                          {(() => {
+                            if (reg.refundStatus === 'requested') {
+                              return (
+                                <span
                                   style={{
-                                    fontSize: '11px',
-                                    fontWeight: 600,
-                                    color: '#E93998',
-                                    border: '1px solid #E93998',
-                                    borderRadius: '4px',
-                                    background: 'rgba(233, 57, 152, 0.08)',
-                                    cursor: 'pointer',
-                                    padding: '3px 8px',
-                                    width: 'fit-content',
                                     display: 'inline-flex',
                                     alignItems: 'center',
-                                    gap: '4px',
+                                    padding: '3px 8px',
+                                    borderRadius: '12px',
+                                    fontSize: '11px',
+                                    fontWeight: 600,
+                                    backgroundColor: '#fef3c7',
+                                    color: '#b45309',
                                   }}
                                 >
-                                  <QrCode size={12} />
-                                  View DuitNow QR
-                                </button>
-                              </div>
-                            )}
-
-                            {!reg.refundBank && !reg.refundQrImage && (
+                                  Refund Requested
+                                </span>
+                              )
+                            }
+                            if (reg.status === 'confirmed') {
+                              return (
+                                <span
+                                  style={{
+                                    display: 'inline-flex',
+                                    alignItems: 'center',
+                                    padding: '3px 8px',
+                                    borderRadius: '12px',
+                                    fontSize: '11px',
+                                    fontWeight: 600,
+                                    backgroundColor: '#dcfce7',
+                                    color: '#15803d',
+                                  }}
+                                >
+                                  Confirmed
+                                </span>
+                              )
+                            }
+                            if (reg.status === 'pending') {
+                              return (
+                                <span
+                                  style={{
+                                    display: 'inline-flex',
+                                    alignItems: 'center',
+                                    padding: '3px 8px',
+                                    borderRadius: '12px',
+                                    fontSize: '11px',
+                                    fontWeight: 600,
+                                    backgroundColor: '#fef9c3',
+                                    color: '#a16207',
+                                  }}
+                                >
+                                  Pending
+                                </span>
+                              )
+                            }
+                            if (reg.status === 'declined') {
+                              return (
+                                <span
+                                  style={{
+                                    display: 'inline-flex',
+                                    alignItems: 'center',
+                                    padding: '3px 8px',
+                                    borderRadius: '12px',
+                                    fontSize: '11px',
+                                    fontWeight: 600,
+                                    backgroundColor: '#ffe4e6',
+                                    color: '#be123c',
+                                  }}
+                                >
+                                  Declined
+                                </span>
+                              )
+                            }
+                            if (reg.status === 'cancelled') {
+                              return (
+                                <span
+                                  style={{
+                                    display: 'inline-flex',
+                                    alignItems: 'center',
+                                    padding: '3px 8px',
+                                    borderRadius: '12px',
+                                    fontSize: '11px',
+                                    fontWeight: 600,
+                                    backgroundColor: '#f1f5f9',
+                                    color: '#64748b',
+                                  }}
+                                >
+                                  Cancelled
+                                </span>
+                              )
+                            }
+                            return (
                               <span
                                 style={{
-                                  fontSize: '12px',
-                                  color: 'var(--theme-elevation-400, #94a3b8)',
+                                  display: 'inline-flex',
+                                  alignItems: 'center',
+                                  padding: '3px 8px',
+                                  borderRadius: '12px',
+                                  fontSize: '11px',
+                                  fontWeight: 600,
+                                  backgroundColor: '#f1f5f9',
+                                  color: '#64748b',
                                 }}
                               >
-                                -
+                                {reg.status || '-'}
                               </span>
-                            )}
-                          </div>
+                            )
+                          })()}
                         </td>
-                      )}
 
-                      {hasRefunds && (
+                        <td style={{ padding: '12px', fontSize: '14px', fontWeight: 600 }}>
+                          {reg.amount ? `RM ${reg.amount}` : '-'}
+                        </td>
+
                         <td style={{ padding: '12px', textAlign: 'center' }}>
                           <input
                             type="checkbox"
-                            checked={isRefunded}
-                            disabled={isRefundLoading}
-                            onChange={() => handleToggleRefunded(reg.id, reg.refundStatus)}
-                            style={{ cursor: 'pointer', accentColor: '#16a34a' }}
+                            checked={reg.attended}
+                            disabled={isAttendedLoading}
+                            onChange={() => handleToggleAttended(reg.id, reg.attended)}
+                            style={{
+                              cursor: 'pointer',
+                              width: '16px',
+                              height: '16px',
+                              accentColor: '#E93998',
+                            }}
                           />
                         </td>
-                      )}
 
-                      <td style={{ padding: '12px', textAlign: 'center' }}>
-                        <input
-                          type="checkbox"
-                          checked={reg.attended}
-                          disabled={isAttendedLoading}
-                          onChange={() => handleToggleAttended(reg.id, reg.attended)}
-                          style={{ cursor: 'pointer', accentColor: '#E93998' }}
-                        />
-                      </td>
+                        <td style={{ padding: '12px', fontSize: '12px', color: '#64748b' }}>
+                          {new Date(reg.createdAt).toLocaleDateString('en-MY')}
+                        </td>
 
-                      <td style={{ padding: '12px', fontSize: '12px', color: '#64748b' }}>
-                        {new Date(reg.createdAt).toLocaleDateString('en-MY')}
-                      </td>
-
-                      <td style={{ padding: '12px', textAlign: 'right' }}>
-                        <a
-                          href={`/admin/collections/registrations/${reg.id}`}
-                          style={{ color: '#64748b' }}
-                        >
-                          <ExternalLink size={16} />
-                        </a>
-                      </td>
-                    </tr>
-                  )
-                })}
-              </tbody>
-            </table>
-          </div>
-        )}
+                        <td style={{ padding: '12px', textAlign: 'right' }}>
+                          <a
+                            href={`/admin/collections/registrations/${reg.id}`}
+                            style={{ color: '#64748b' }}
+                          >
+                            <ExternalLink size={16} />
+                          </a>
+                        </td>
+                      </tr>
+                    )
+                  })}
+                </tbody>
+              </table>
+            </div>
+          )}
+        </div>
       </div>
 
-      {/* DuitNow QR Image View Modal */}
+      {/* DuitNow QR Image Viewer Modal */}
       {viewingQrUrl && (
         <div
           style={{
             position: 'fixed',
-            top: 0,
-            left: 0,
-            right: 0,
-            bottom: 0,
-            backgroundColor: 'rgba(0, 0, 0, 0.75)',
+            inset: 0,
+            backgroundColor: 'rgba(0,0,0,0.6)',
+            zIndex: 99999,
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
-            zIndex: 99999,
-            padding: '20px',
+            padding: '16px',
           }}
           onClick={() => setViewingQrUrl(null)}
         >
